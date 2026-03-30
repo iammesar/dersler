@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BT Sınav Kampı – 6. Sınıf</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0D1117; --card:#161B22;
+  --cyan:#00D2FF; --lime:#A8FF3E; --purple:#C084FC;
+  --blue:#60A5FA; --pink:#F472B6; --orange:#FB923C;
+  --red:#F87171; --teal:#2DD4BF;
+  --text:#F0F6FF; --muted:#7D8FA0; --border:rgba(255,255,255,0.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* GRID BG */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,210,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,210,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+/* HUD */
+.hud{position:sticky;top:0;z-index:100;background:rgba(13,17,23,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.hud-xp{flex:1;min-width:150px;}
+.hud-xp-label{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;margin-bottom:4px;display:flex;justify-content:space-between;}
+.xp-track{height:8px;background:rgba(255,255,255,.07);border-radius:30px;overflow:hidden;}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--lime));border-radius:30px;transition:width .5s ease;width:0%;}
+.hud-stats{display:flex;gap:8px;flex-wrap:wrap;}
+.stat-pill{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;}
+.stat-pill .val{font-family:'Fredoka One',cursive;font-size:16px;}
+.cv{color:var(--teal);} .wv{color:var(--red);} .sv{color:var(--lime);}
+
+/* SCREENS */
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* HOME */
+header{position:relative;z-index:1;text-align:center;padding:38px 20px 26px;}
+.logo{font-family:'Fredoka One',cursive;font-size:clamp(26px,6vw,52px);background:linear-gradient(135deg,#00D2FF,#A8FF3E,#C084FC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.15;}
+.subtitle{color:var(--muted);font-size:14px;font-weight:700;margin-top:6px;letter-spacing:1px;}
+.container{position:relative;z-index:1;max-width:940px;margin:0 auto;padding:20px 16px 60px;}
+.sec-label{font-family:'Fredoka One',cursive;font-size:18px;color:var(--muted);margin-bottom:14px;}
+.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:22px;}
+.topic-card{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:18px 14px;cursor:pointer;text-align:center;transition:transform .2s,border-color .2s,box-shadow .2s;}
+.topic-card:hover{transform:translateY(-4px);border-color:var(--tc,var(--cyan));box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.t-icon{font-size:32px;display:block;margin-bottom:8px;}
+.t-name{font-weight:800;font-size:13px;line-height:1.4;}
+.t-count{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600;}
+.t-bar{height:4px;background:rgba(255,255,255,.07);border-radius:10px;margin-top:10px;overflow:hidden;}
+.t-bar-fill{height:100%;border-radius:10px;background:var(--tc,var(--cyan));width:0%;transition:width .4s;}
+.btn-all{display:block;margin:0 auto;padding:14px 34px;background:linear-gradient(135deg,var(--cyan),var(--lime));color:#0D1117;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 18px rgba(0,210,255,.3);transition:transform .2s,box-shadow .2s;}
+.btn-all:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(0,210,255,.45);}
+
+/* QUIZ */
+.quiz-top{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.btn-back{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:8px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:background .2s;}
+.btn-back:hover{background:rgba(255,255,255,.11);}
+.q-info{font-size:13px;color:var(--muted);font-weight:700;}
+.q-dots{display:flex;gap:5px;flex-wrap:wrap;max-width:300px;}
+.q-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.1);transition:background .3s,transform .3s;flex-shrink:0;}
+.q-dot.dc{background:var(--teal);}
+.q-dot.dw{background:var(--red);}
+.q-dot.da{background:var(--lime);transform:scale(1.5);}
+
+#arena{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:14px 16px 80px;}
+
+/* Q CARD */
+.q-card{background:var(--card);border:1.5px solid var(--border);border-radius:22px;padding:24px 20px;margin-bottom:14px;animation:slideIn .3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.q-type-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:12px;}
+.bm{background:rgba(192,132,252,.15);color:var(--purple);border:1px solid rgba(192,132,252,.3);}
+.bf{background:rgba(45,212,191,.15);color:var(--teal);border:1px solid rgba(45,212,191,.3);}
+.bo{background:rgba(96,165,250,.15);color:var(--blue);border:1px solid rgba(96,165,250,.3);}
+.bmt{background:rgba(251,191,36,.15);color:#FBD65C;border:1px solid rgba(251,191,36,.3);}
+.bor{background:rgba(251,146,60,.15);color:var(--orange);border:1px solid rgba(251,146,60,.3);}
+.topic-tag{float:right;font-size:11px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.04);padding:3px 10px;border-radius:20px;}
+.q-num{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;}
+.q-text{font-size:16px;font-weight:700;line-height:1.65;margin-bottom:20px;color:#EFF6FF;clear:both;}
+.q-note{font-size:13px;font-weight:600;color:var(--muted);background:rgba(255,255,255,.04);border-radius:10px;padding:10px 14px;margin-bottom:14px;line-height:1.6;border-left:3px solid var(--cyan);}
+
+/* MCQ */
+.options{display:grid;gap:9px;}
+.opt{background:rgba(255,255,255,.03);border:2px solid rgba(255,255,255,.08);border-radius:13px;padding:13px 16px;cursor:pointer;display:flex;align-items:flex-start;gap:11px;transition:all .2s;font-weight:600;font-size:14px;text-align:left;line-height:1.5;width:100%;}
+.opt:hover{background:rgba(0,210,255,.06);border-color:rgba(0,210,255,.25);transform:translateX(3px);}
+.opt.disabled{cursor:default;pointer-events:none;}
+.opt.cor{border-color:var(--teal)!important;background:rgba(45,212,191,.1)!important;}
+.opt.wrn{border-color:var(--red)!important;background:rgba(248,113,113,.1)!important;animation:shake .3s ease;}
+.opt.rev{border-color:var(--teal)!important;background:rgba(45,212,191,.04)!important;}
+@keyframes shake{0%,100%{transform:translateX(0);}30%{transform:translateX(-6px);}70%{transform:translateX(6px);}}
+.opt-letter{min-width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;font-size:13px;flex-shrink:0;}
+
+/* FILL */
+.hint-btn{background:none;border:1px dashed rgba(251,191,36,.35);border-radius:10px;color:#FBD65C;padding:7px 14px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;margin-bottom:10px;transition:background .2s;}
+.hint-btn:hover{background:rgba(251,191,36,.08);}
+.hint-box{background:rgba(251,191,36,.06);border:1px dashed rgba(251,191,36,.28);border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:13px;font-weight:600;color:#FDE68A;line-height:1.6;display:none;}
+.hint-box.show{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.fill-input{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.12);border-radius:12px;padding:11px 16px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;width:100%;max-width:420px;outline:none;transition:border-color .2s;display:block;margin-bottom:8px;}
+.fill-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(45,212,191,.12);}
+.fill-input.cor{border-color:var(--teal);background:rgba(45,212,191,.08);}
+.fill-input.wrn{border-color:var(--red);background:rgba(248,113,113,.08);}
+
+/* OPEN */
+.open-ta{width:100%;background:rgba(255,255,255,.03);border:2px solid rgba(255,255,255,.09);border-radius:14px;padding:14px 16px;color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;resize:vertical;min-height:120px;outline:none;transition:border-color .2s;line-height:1.6;display:block;}
+.open-ta:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(96,165,250,.12);}
+
+/* MATCH */
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.match-col-title{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:center;}
+.match-col{display:flex;flex-direction:column;gap:8px;}
+.match-item{background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 14px;cursor:pointer;font-size:13px;font-weight:700;text-align:center;transition:all .2s;min-height:46px;display:flex;align-items:center;justify-content:center;line-height:1.4;}
+.match-item:hover{background:rgba(0,210,255,.07);border-color:rgba(0,210,255,.25);}
+.match-item.msel{border-color:var(--purple);background:rgba(192,132,252,.12);}
+.match-item.mok{border-color:var(--teal);background:rgba(45,212,191,.09);cursor:default;pointer-events:none;}
+.match-item.mno{border-color:var(--red);animation:shake .35s ease;}
+
+/* ORDER */
+.order-list{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.order-item{background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 16px;cursor:grab;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700;transition:border-color .2s,background .2s;user-select:none;}
+.order-item:hover{background:rgba(255,255,255,.07);}
+.order-item.dragging{opacity:.3;cursor:grabbing;}
+.order-item.over-el{border-color:var(--orange);background:rgba(251,146,60,.09);}
+.order-item.oc{border-color:var(--teal);background:rgba(45,212,191,.09);}
+.order-item.ow{border-color:var(--red);background:rgba(248,113,113,.07);}
+.order-item.locked{cursor:default;}
+.drag-handle{color:var(--muted);font-size:18px;flex-shrink:0;}
+
+/* TABLE MATCH */
+.table-match{width:100%;border-collapse:collapse;margin-bottom:8px;}
+.table-match th{background:rgba(0,210,255,.12);color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:10px 14px;text-align:left;}
+.table-match td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px;font-weight:600;vertical-align:middle;}
+.table-match tr:last-child td{border-bottom:none;}
+.table-match select{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.12);border-radius:8px;color:var(--text);font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;padding:6px 10px;outline:none;cursor:pointer;transition:border-color .2s;width:100%;}
+.table-match select:focus{border-color:var(--teal);}
+.table-match select.cor{border-color:var(--teal);background:rgba(45,212,191,.1);}
+.table-match select.wrn{border-color:var(--red);background:rgba(248,113,113,.08);}
+
+/* FEEDBACK */
+.feedback{border-radius:14px;padding:14px 18px;margin-top:14px;display:none;gap:11px;align-items:flex-start;}
+.feedback.vis{display:flex;animation:fadeIn .3s ease;}
+.fb-cor{background:rgba(45,212,191,.09);border:1px solid rgba(45,212,191,.28);}
+.fb-wrn{background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.28);}
+.fb-model{background:rgba(96,165,250,.09);border:1px solid rgba(96,165,250,.24);}
+.fb-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.fb-body{font-size:14px;font-weight:600;line-height:1.7;color:#DBEAFE;}
+.fb-body strong{color:var(--teal);}
+.model-box{margin-top:8px;padding:10px 14px;background:rgba(255,255,255,.04);border-radius:10px;font-size:13px;color:#BFDBFE;line-height:1.75;}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.btn{padding:11px 22px;border-radius:12px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;transition:transform .2s,box-shadow .2s;display:inline-flex;align-items:center;gap:6px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-primary{background:linear-gradient(135deg,var(--cyan),#00A8CC);color:#0D1117;box-shadow:0 4px 14px rgba(0,210,255,.3);}
+.btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,210,255,.45);}
+.btn-lime{background:linear-gradient(135deg,var(--lime),#7ECC00);color:#0D1117;box-shadow:0 4px 14px rgba(168,255,62,.25);}
+.btn-lime:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(168,255,62,.4);}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{background:rgba(255,255,255,.1);}
+
+/* RESULTS */
+.results-wrap{max-width:660px;margin:0 auto;padding:40px 20px 80px;text-align:center;position:relative;z-index:1;}
+.res-title{font-family:'Fredoka One',cursive;font-size:42px;margin-bottom:6px;}
+.res-sub{color:var(--muted);font-size:15px;font-weight:700;margin-bottom:26px;}
+.score-ring{width:148px;height:148px;border-radius:50%;border:6px solid var(--teal);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 26px;}
+.score-pct{font-family:'Fredoka One',cursive;font-size:46px;line-height:1;}
+.score-lbl{font-size:12px;font-weight:700;color:var(--muted);}
+.res-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px;}
+.res-badge{background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:14px;padding:12px 18px;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.rb-icon{font-size:24px;}
+.rb-val{font-family:'Fredoka One',cursive;font-size:20px;}
+.rb-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+
+/* TOAST */
+.toast{position:fixed;top:66px;right:16px;z-index:9999;padding:11px 18px;border-radius:12px;font-weight:800;font-size:13px;display:flex;align-items:center;gap:7px;box-shadow:0 8px 28px rgba(0,0,0,.5);pointer-events:none;animation:toastIn .35s cubic-bezier(.34,1.56,.64,1),toastOut .3s ease 2.1s forwards;}
+.t-cor{background:linear-gradient(135deg,#2DD4BF,#059669);color:#022C22;}
+.t-wrn{background:linear-gradient(135deg,#F87171,#DC2626);color:#fff;}
+@keyframes toastIn{from{opacity:0;transform:translateX(60px) scale(.8);}to{opacity:1;transform:translateX(0) scale(1);}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateX(60px);}}
+
+/* CONFETTI */
+.cf{position:fixed;top:-10px;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:9999;animation:cfFall var(--d,3s) ease-in var(--dl,0s) forwards;}
+@keyframes cfFall{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+/* GRID BG dots */
+.dot-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+</style>
+</head>
+<body>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="hud-xp">
+    <div class="hud-xp-label"><span>⚡ XP</span><span id="xpNum">0 XP</span></div>
+    <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+  </div>
+  <div class="hud-stats">
+    <div class="stat-pill">✅ <span class="val cv" id="sc">0</span></div>
+    <div class="stat-pill">❌ <span class="val wv" id="sw">0</span></div>
+    <div class="stat-pill">🔥 <span class="val sv" id="ss">0</span></div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <header>
+    <div class="logo">🖥️ BT Sınav Kampı</div>
+    <div class="subtitle">6. Sınıf · 2. Dönem 1. Yazılı Hazırlık</div>
+  </header>
+  <div class="container">
+    <div class="sec-label">📍 Hangi konudan başlayalım?</div>
+    <div class="topics-grid" id="topicsGrid"></div>
+    <button class="btn-all" id="btnAll">🚀 Tüm Konular – Karma Mod</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="quiz-top">
+    <button class="btn-back" id="btnBack">← Ana Sayfa</button>
+    <div class="q-info" id="qInfo">Soru 1 / 10</div>
+    <div class="q-dots" id="qDots"></div>
+  </div>
+  <div id="arena"></div>
+</div>
+
+<!-- RESULTS -->
+<div id="results" class="screen">
+  <div class="results-wrap">
+    <div class="res-title" id="resTitle">🎉</div>
+    <div class="res-sub" id="resSub"></div>
+    <div class="score-ring" id="scoreRing">
+      <div class="score-pct" id="resPct">0%</div>
+      <div class="score-lbl">başarı</div>
+    </div>
+    <div class="res-badges">
+      <div class="res-badge"><span class="rb-icon">✅</span><span class="rb-val" id="rC">0</span><span class="rb-lbl">Doğru</span></div>
+      <div class="res-badge"><span class="rb-icon">❌</span><span class="rb-val" id="rW">0</span><span class="rb-lbl">Yanlış</span></div>
+      <div class="res-badge"><span class="rb-icon">⚡</span><span class="rb-val" id="rX">0</span><span class="rb-lbl">XP</span></div>
+      <div class="res-badge"><span class="rb-icon">🔥</span><span class="rb-val" id="rS">0</span><span class="rb-lbl">En İyi Seri</span></div>
+    </div>
+    <div class="res-badges" id="earnedBadges"></div>
+    <div class="btn-row" style="justify-content:center;margin-top:8px;">
+      <button class="btn btn-lime" id="retryBtn" style="display:none;">🔁 Yanlışları Tekrar Et</button>
+      <button class="btn btn-primary" id="btnHome2">🏠 Ana Sayfa</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var TOPICS = [
+  {id:'data',    name:'Veri & Veri Türleri',   icon:'🗃️', color:'#00D2FF', qids:[0,1,2,3,4,5,6,7,8]},
+  {id:'const',   name:'Sabit & Değişken',       icon:'📌', color:'#A8FF3E', qids:[9,10,11,12,13,14,15,16]},
+  {id:'prob',    name:'Problem Çeşitleri',       icon:'🧩', color:'#C084FC', qids:[17,18,19,20]},
+  {id:'algo',    name:'Algoritma',               icon:'⚙️', color:'#FB923C', qids:[21,22,23,24,25,26]},
+  {id:'flow',    name:'Akış Şeması',             icon:'📊', color:'#F472B6', qids:[27,28,29,30]},
+];
+
+var Q = [
+  // ─── VERİ & VERİ TÜRLERİ ───
+  {id:0,topic:'data',type:'mcq',
+   text:'Aşağıdaki müze istatistik metnindeki verilerden hangisi DOĞRU bir veri örneği DEĞİLDİR?',
+   opts:['840.606 (arkeolojik eser sayısı)',
+         '3.004.620 (Topkapı Sarayı ziyaretçi sayısı)',
+         'En güzel müze Topkapı\'dır. (görüş/yorum)',
+         '28.145.550 (2018 ziyaretçi sayısı)'],
+   cor:2,
+   exp:'Veri; ölçüm, sayım veya gözlemle elde edilen ham gerçeklerdir. "En güzel müze" ifadesi öznel bir görüştür, bilimsel veri değildir. 840.606, 3.004.620 ve 28.145.550 birer sayısal veridir.'},
+
+  {id:1,topic:'data',type:'mcq',
+   text:'Tarih, saat, adres veya banka hesap numarası gibi hem harf, hem rakam hem de sembol barındıran veriler hangi veri tipiyle ifade edilir?',
+   opts:['Sayısal Veri Tipi',
+         'Mantıksal Veri Tipi',
+         'Özel Veri Tipi',
+         'Karakter Dizisi Veri Tipi'],
+   cor:2,
+   exp:'Tarih, saat, adres gibi hem harf hem rakam hem de sembol içeren karma yapılı veriler "Özel Veri Tipi" (datetime, address vb.) olarak sınıflandırılır.'},
+
+  {id:2,topic:'data',type:'mcq',
+   text:'"19 Mayıs 1881" tarihini bilgisayara kaydetmek için hangi veri tipi en uygundur?',
+   opts:['Sayısal Veri Tipi (Integer)',
+         'Özel Veri Tipi (Date)',
+         'Mantıksal Veri Tipi (Boolean)',
+         'Karakter Veri Tipi (Char)'],
+   cor:1,
+   exp:'"19 Mayıs 1881" bir tarihtir. Tarihleri saklamak için bilgisayar biliminde "Date" (Tarih) veri tipi kullanılır; bu, özel veri tipleri kategorisindedir.'},
+
+  {id:3,topic:'data',type:'mcq',
+   text:'Türkiye\'nin güncel nüfusu gibi matematiksel hesaplama gerektiren büyük tam sayılar programlamada hangi veri tipiyle tanımlanır?',
+   opts:['Karakter Dizisi (String)',
+         'Mantıksal (Boolean)',
+         'Sayısal veri tipi (Integer/Long)',
+         'Özel Veri Tipi'],
+   cor:2,
+   exp:'Nüfus gibi matematiksel işlem yapılabilecek büyük tam sayılar "Sayısal Veri Tipi" ile tanımlanır. Küçük tam sayılar için Integer, çok büyük sayılar için Long kullanılır.'},
+
+  {id:4,topic:'data',type:'mcq',
+   text:'"Takdir belgesi aldı mı?" sorusunun yanıtı (Evet/Hayır) bilgisayarda hangi veri tipine girer?',
+   opts:['Karakter (Char)',
+         'Sayısal (Integer)',
+         'Mantıksal (Boolean)',
+         'Karakter Dizisi (String)'],
+   cor:2,
+   exp:'Sadece Doğru/Yanlış ya da Evet/Hayır değeri alabilen veriler "Mantıksal (Boolean)" veri tipidir. Boolean; True veya False olmak üzere yalnızca iki değer alır.'},
+
+  {id:5,topic:'data',type:'mcq',
+   text:'E-posta adreslerinde "@" işareti hangi veri türüne örnektir?',
+   opts:['Sayısal Veri Tipi',
+         'Mantıksal Veri Tipi',
+         'Karakter Dizisi Veri Tipi',
+         'Karakter Veri Tipi (Char)'],
+   cor:3,
+   exp:'"@" gibi tek bir sembol ya da harf "Karakter (Char)" veri tipidir. Karakter tipi; tek bir harf, rakam veya özel semboldür. Birden fazla karakter bir araya gelince "Karakter Dizisi (String)" olur.'},
+
+  {id:6,topic:'data',type:'match',
+   text:'Cümlelerdeki koyu veriyi doğru veri tipiyle eşleştiriniz.',
+   pairs:[
+     {left:'Excel\'de 1.048.576 satır', right:'Sayısal Veri Tipi'},
+     {left:'Heyecanlıyım (metin)', right:'Karakter Dizisi Veri Tipi'},
+     {left:'"@" sembolü', right:'Karakter Veri Tipi'},
+     {left:'Evet/Hayır cevabı', right:'Mantıksal Veri Tipi'},
+     {left:'19 Mayıs 1881 tarihi', right:'Özel Veri Tipi'},
+   ],
+   exp:'Sayısal: rakam | Karakter Dizisi: kelime/cümle | Karakter: tek sembol | Mantıksal: Evet/Hayır | Özel: tarih, saat, adres gibi karma yapılar.'},
+
+  {id:7,topic:'data',type:'fill',
+   text:'Programlamada yalnızca Doğru (True) ya da Yanlış (False) olmak üzere iki değer alabilen veri tipine ___ denir.',
+   answer:'boolean',
+   alts:['mantıksal','mantıksal veri tipi','bool'],
+   hint:'İngilizcesi matematikçi George Boole\'dan gelir. Evet/Hayır sadece iki seçenek…',
+   exp:'Boolean (Mantıksal) veri tipi yalnızca True/False (Doğru/Yanlış) değeri alır. Koşul kontrollerinde sıkça kullanılır.'},
+
+  {id:8,topic:'data',type:'mcq',
+   text:'"Bilişim teknolojileri dersimiz olduğu için çok heyecanlıyım" cümlesindeki koyu veri (heyecanlıyım/metin) hangi veri tipine girer?',
+   opts:['Sayısal Veri Tipi',
+         'Mantıksal Veri Tipi',
+         'Karakter Dizisi (String) Veri Tipi',
+         'Özel Veri Tipi'],
+   cor:2,
+   exp:'Bir kelime ya da cümle gibi birden fazla karakterden oluşan metinler "Karakter Dizisi (String)" veri tipidir. String; harfler, rakamlar ve sembollerden oluşan metin verisidir.'},
+
+  // ─── SABİT & DEĞİŞKEN ───
+  {id:9,topic:'const',type:'mcq',
+   text:'"Su normal koşullar altında 0°C\'de donar ve 100°C\'de kaynar." Cümlesindeki sabitler hangileridir?',
+   opts:['Su ve normal koşullar',
+         '0°C ve 100°C (kaynama ve donma noktaları)',
+         'Donma ve kaynar kelimeleri',
+         'Hiçbiri; hepsi değişkendir.'],
+   cor:1,
+   exp:'Sabit; hiçbir koşulda değişmeyen değerdir. Suyun standart koşullarda donma noktası 0°C ve kaynama noktası 100°C sabit fiziksel değerlerdir.'},
+
+  {id:10,topic:'const',type:'match',
+   text:'Aşağıdaki kavramların SABİT mi DEĞİŞKEN mi olduğunu eşleştiriniz.',
+   pairs:[
+     {left:'KDV %18', right:'SABİT'},
+     {left:'Oyun skoru 10.523', right:'DEĞİŞKEN'},
+     {left:'Voleybolda 6 oyuncu', right:'SABİT'},
+     {left:'Ürün fiyatı 20 TL', right:'DEĞİŞKEN'},
+     {left:'Pi sayısı (22/7)', right:'SABİT'},
+   ],
+   exp:'Sabit: programın çalışması boyunca değişmeyen değer (KDV oranı, Pi, oyun kuralı). Değişken: çalışma sırasında güncellenen değer (skor, fiyat, kullanıcı adı).'},
+
+  {id:11,topic:'const',type:'mcq',
+   text:'Maçtaki gol sayısı sabit mi yoksa değişken midir?',
+   opts:['Sabittir; her maçta gol sayısı aynıdır.',
+         'Değişkendir; her maçta gol sayısı farklı olabilir.',
+         'Her iki anlama da gelir.',
+         'Gol sayısı veri değildir.'],
+   cor:1,
+   exp:'Gol sayısı her maçta farklı olduğundan DEĞİŞKENdir. Değişken; programın çalışması sırasında değeri güncellenebilen ifadedir.'},
+
+  {id:12,topic:'const',type:'mcq',
+   text:'Formula 1 yarışlarındaki arabaların hızı sabit mi yoksa değişken midir?',
+   opts:['Sabittir; arabalar hep aynı hızda gider.',
+         'Değişkendir; hız her an farklı olabilir.',
+         'Pi sayısı gibi sabittir.',
+         'Boolean (mantıksal) veridir.'],
+   cor:1,
+   exp:'Arabaların hızı sürekli değiştiğinden DEĞİŞKENdir. Sabitler; matematiksel veya fiziksel açıdan hiçbir koşulda değişmeyen değerlerdir (Pi, ışık hızı vb.).'},
+
+  {id:13,topic:'const',type:'fill',
+   text:'Programın çalışması süresince hafızada hiçbir durumda değişmeyen ifade veya nesnelere ___ adı verilir.',
+   answer:'sabit',
+   alts:['constant','sabit değer'],
+   hint:'Matematiksel Pi sayısı gibi; ne olursa olsun değeri değişmez…',
+   exp:'Sabit (Constant): programın çalışması boyunca değeri asla değişmeyen ifadedir. Örnek: Pi = 3.14159…, suyun donma noktası = 0°C.'},
+
+  {id:14,topic:'const',type:'mcq',
+   text:'Çevrimiçi bilgisayar oyununda sürekli güncellenen "Skor" değeri hangi kavrama örnektir?',
+   opts:['Sabit','Değişken','Boolean','Algoritma'],
+   cor:1,
+   exp:'Skor; kullanıcı oynadıkça değiştiğinden DEĞİŞKENdir. Değişken (Variable): programın çalışması sırasında farklı değerler alabilen ve hafızada yer tutan isimli bellek gözüdür.'},
+
+  {id:15,topic:'const',type:'mcq',
+   text:'İki sayının toplamını bulan algoritmada dışarıdan girilen S1 ve S2 sayıları neden sabit değil değişkendir?',
+   opts:['Çünkü sadece 2 değer alırlar.',
+         'Çünkü her kullanıcıda farklı değer girilir; hafızadaki değerleri güncellenir.',
+         'Çünkü matematiksel işlem yapılır.',
+         'Çünkü Boolean tipindedirler.'],
+   cor:1,
+   exp:'S1 ve S2 her çalıştırmada farklı değer alabileceğinden DEĞİŞKENdir. Bir değişkene yeni değer atandığında eski değer bellekten silinir, yerine yeni değer yazılır.'},
+
+  {id:16,topic:'const',type:'order',
+   text:'Aşağıdaki ifadeleri SABİT → DEĞİŞKEN sırasına göre (önce sabitler, sonra değişkenler) diziniz.',
+   items:['Pi sayısının matematiksel değeri','Klavyedeki yön tuşu sayısı (4)','Bir saatteki dakika sayısı (60)','Gün içinde ölçülen rüzgar hızı','Web sitesinin günlük ziyaretçi sayısı','Drone\'un anlık batarya seviyesi'],
+   correctOrder:[0,1,2,3,4,5],
+   exp:'Sabitler: Pi sayısı, yön tuşu sayısı (4), saatteki dakika sayısı (60) — bunlar hiç değişmez. Değişkenler: rüzgar hızı, ziyaretçi sayısı, batarya seviyesi — bunlar sürekli güncellenir.'},
+
+  // ─── PROBLEM ÇEŞİTLERİ ───
+  {id:17,topic:'prob',type:'mcq',
+   text:'"Defter etiketine isim yazmak" veya "Telefonu şarja takmak" hangi problem türüne örnektir?',
+   opts:['Karmaşık Problem',
+         'Basit Problem',
+         'Alt Problem',
+         'Algoritma Problemi'],
+   cor:1,
+   exp:'Basit Problem: her koşulda aynı yönde ilerleyen, az adımdan oluşan problemlerdir. "İsim yazmak" veya "şarj takmak" basit, tekrarlı adımlardan oluşur.'},
+
+  {id:18,topic:'prob',type:'mcq',
+   text:'"Bir robot yapmak" veya "Okul birincisi olmak" hangi problem türüdür?',
+   opts:['Basit Problem',
+         'Karmaşık Problem',
+         'Mantıksal Problem',
+         'Veri Problemi'],
+   cor:1,
+   exp:'Karmaşık Problem: duruma özgü, şartlara göre değişen çözüm adımlarından oluşur; alt problemlere ayrılabilir; takım çalışması gerekebilir. Robot yapmak veya okul birincisi olmak buna örnektir.'},
+
+  {id:19,topic:'prob',type:'match',
+   text:'Problem durumunu türüyle eşleştiriniz.',
+   pairs:[
+     {left:'Bir yarışmaya hazırlanmak', right:'Karmaşık Problem'},
+     {left:'Telefonu şarja takmak', right:'Basit Problem'},
+     {left:'Bir oyun tasarlamak', right:'Karmaşık Problem'},
+     {left:'EBA\'ya giriş yapmak', right:'Basit Problem'},
+     {left:'Proje ödevi hazırlamak', right:'Karmaşık Problem'},
+   ],
+   exp:'Basit: az adım, her zaman aynı yol (şarj takmak, EBA girişi). Karmaşık: çok adım, değişken koşullar, alt problemler (yarışma hazırlığı, oyun tasarımı, proje ödevi).'},
+
+  {id:20,topic:'prob',type:'fill',
+   text:'Karmaşık problemleri daha kolay çözebilmek için onları yönetilebilir küçük alt problemlere ayırma stratejisine ___ denir.',
+   answer:'ayrıştırma',
+   alts:['parçalama','alt problemlere ayırma','decomposition','problem ayrıştırma','bölme'],
+   hint:'İngilizce "decomposition" kavramına karşılık gelir. Büyük problemi küçük parçalara…',
+   exp:'Ayrıştırma (Decomposition): karmaşık bir problemi daha küçük ve yönetilebilir alt problemlere bölme stratejisidir. Bu sayede her alt problem ayrı ayrı çözülür.'},
+
+  // ─── ALGORİTMA ───
+  {id:21,topic:'algo',type:'fill',
+   text:'Bilgisayarın anlayacağı şekilde, bir problemi çözmek için adım adım yazılmış talimatlar dizisine ___ denir.',
+   answer:'algoritma',
+   alts:['algoritmik düşünme'],
+   hint:'"Algorithm" sözcüğü 9. yüzyıl matematikçisi El-Harezmi\'nin adından gelir…',
+   exp:'Algoritma: bir problemi çözmek veya hedefe ulaşmak için belirli bir sırayla yazılmış, bilgisayarın anlayacağı adımlar dizisidir.'},
+
+  {id:22,topic:'algo',type:'order',
+   text:'Ayran yapma algoritmasını doğru adım sırasına diziniz.',
+   items:['🥛 Hepsini kıvama gelinceye kadar karıştır','🧂 Üzerine 1 çay kaşığı tuz ekle','🫙 Yarım kilo yoğurdu kaba koy','💧 Üzerine 1 litre su ekle','✅ Ayran hazır!'],
+   correctOrder:[2,3,1,0,4],
+   exp:'BAŞLA → Yoğurdu kaba koy → Su ekle → Tuz ekle → Karıştır → Ayran hazır → BİTİR. Algoritmada sıra çok önemlidir; yanlış sıra yanlış sonuç verir.'},
+
+  {id:23,topic:'algo',type:'mcq',
+   text:'Zekiye teyzenin yumurta algoritmasında koşullu yapı (EĞER–O ZAMAN) nerede kullanılır?',
+   opts:['Her gün yumurta kontrol ederken.',
+         'Sadece cumartesi kontrol eder; EĞER yumurta kalmamışsa BAKKALA GİT.',
+         'Her sabah haşlama yaparken.',
+         'Yumurta sayısını sayarken.'],
+   cor:1,
+   exp:'Koşullu yapı: EĞER (cumartesi günü) VE (yumurta kalmamışsa) O ZAMAN bakkala git ve 30 yumurta al. Bu; algoritmada karar verme (dallanma) adımıdır.'},
+
+  {id:24,topic:'algo',type:'mcq',
+   text:'Bir algoritmada her adıma numara verilmesinin programcıya sağladığı temel kolaylık nedir?',
+   opts:['Algoritmayı daha uzun yapar.',
+         'Adım adım takip, referans verme (X. adıma git) ve hata ayıklamayı kolaylaştırır.',
+         'Bilgisayarın daha hızlı çalışmasını sağlar.',
+         'Akış şeması çizmeyi gereksiz kılar.'],
+   cor:1,
+   exp:'Numaralı adımlar; algoritmayı takip etmeyi, "7. adıma git" gibi yönlendirme yapmayı ve hangi adımda hata olduğunu bulmayı (debug) kolaylaştırır.'},
+
+  {id:25,topic:'algo',type:'mcq',
+   text:'Algoritmaların bilgisayarların yanı sıra virüs salgınında hastane prosedürleri gibi hayatın her alanında kullanılmasının temel amacı nedir?',
+   opts:['Sadece bilgisayarlar içindir.',
+         'Karmaşık süreçleri standartlaştırmak, hata riskini azaltmak ve tekrarlanabilir çözümler üretmek.',
+         'İnsanları robotlaştırmak.',
+         'Sadece matematiksel hesaplama yapmak.'],
+   cor:1,
+   exp:'Algoritma; herhangi bir alanda karmaşık bir süreci standart, tekrarlanabilir ve hatasız adımlara indirger. Bu sayede farklı kişiler veya sistemler aynı doğru sonuca ulaşabilir.'},
+
+  {id:26,topic:'algo',type:'open',
+   text:'Verilen hatalı algoritmada (Alya\'nın yazılım indirme) hangi adımlar yanlış sıradaydı? Doğru algoritma akışını kısaca açıklayınız.',
+   hint:'Önce yaşı oku, sonra koşulları kontrol et sırası doğrudur. Sayaç ne zaman devreye girmeli?',
+   model:'Doğru sıra:\n1. Başla\n2. Yaş değerini oku\n3. Yaş 13\'den küçük ise → "İndirme açılamıyor" yaz → Bitir\n4. Yaş 18\'den büyük ise → Dosyayı indir → Bitir\n5. (13-18 arası) Veli e-posta adresini iste\n6. E-posta onay kodunu oku\n7. Sayaç = 0\n8. Sayaç değerini 1 artır\n9. Kod yanlış ise → Sayaç 2\'den büyük mü? Evet → İndirme açılamıyor → Bitir; Hayır → 6. adıma dön\n10. Dosyayı indir → Bitir'},
+
+  // ─── AKIŞ ŞEMASI ───
+  {id:27,topic:'flow',type:'fill',
+   text:'Bir algoritmayı tanımlayan, işlem adımlarının sırasını geometrik şekiller kullanarak gösteren evrensel diyagramlara ___ denir.',
+   answer:'akış şeması',
+   alts:['flowchart','akış diyagramı','akis semasi'],
+   hint:'İngilizcesi "flowchart". Geometrik şekiller ve oklar kullanılır…',
+   exp:'Akış Şeması (Flowchart): algoritmanın adımlarını standart geometrik şekillerle görselleştiren evrensel diyagramdır. Tüm dünyada aynı semboller kullanılır.'},
+
+  {id:28,topic:'flow',type:'mcq',
+   text:'Akış şemalarında "Başla" ve "Bitir" komutlarını görselleştirmek için hangi geometrik şekil kullanılır?',
+   opts:['Dikdörtgen (Rectangle)','Eşkenar Dörtgen (Karar Kutusu)','Oval / Elips (Yuvarlatılmış Dikdörtgen)','Paralel Kenar (Girdi/Çıktı)'],
+   cor:2,
+   exp:'Oval/Elips (Terminal): akış şemasında BAŞLA ve BİTİR adımları için kullanılır. Dikdörtgen: işlem, Eşkenar dörtgen: karar, Paralel kenar: girdi/çıktı.'},
+
+  {id:29,topic:'flow',type:'mcq',
+   text:'"Sayı 1 ve Sayı 2\'yi topla" işlemi eşkenar dörtgen (karar kutusu) içine yazılmıştır. Bu kural hatası nedir?',
+   opts:['Hata yok; karar kutusu her işlem için kullanılır.',
+         'Eşkenar dörtgen yalnızca EVET/HAYIR kararları içindir. Bu işlem dikdörtgen (işlem kutusu) içine yazılmalıydı.',
+         'Oval şekil kullanılmalıydı.',
+         'Paralel kenar kullanılmalıydı.'],
+   cor:1,
+   exp:'Eşkenar dörtgen (Karar Kutusu): yalnızca EVET/HAYIR soruları için kullanılır. "Topla" gibi matematiksel işlemler için dikdörtgen (İşlem Kutusu) kullanılmalıdır.'},
+
+  {id:30,topic:'flow',type:'mcq',
+   text:'Bir akış şemasında tüm şekiller doğru çizilmiş ama bağlantı okları unutulmuşsa ne olur?',
+   opts:['Hiçbir şey olmaz; oklar isteğe bağlıdır.',
+         'Algoritmanın akış yönü ve adım sırası bilinemez; şema anlamsız hale gelir.',
+         'Sadece estetik sorun olur.',
+         'Bilgisayar yine de kodu çalıştırır.'],
+   cor:1,
+   exp:'Bağlantı okları; adımlar arasındaki akış yönünü gösterir. Oklar olmadan hangi adımdan hangisine geçileceği bilinemez; algoritma okunamaz hale gelir. Bu, akış şemasının temel kuralını ihlal eder.'},
+];
+
+// ─── STATE ───
+var xp=0, corr=0, wrng=0, streak=0, bestStreak=0;
+var queue=[], qi=0, wrongIds=[], topicDone={};
+var mSel={left:null,right:null,matched:[]};
+var draggedEl=null;
+
+// ─── HUD ───
+function updateHUD(){
+  document.getElementById('xpNum').textContent=xp+' XP';
+  document.getElementById('xpFill').style.width=(xp%100)+'%';
+  document.getElementById('sc').textContent=corr;
+  document.getElementById('sw').textContent=wrng;
+  document.getElementById('ss').textContent=streak;
+}
+
+// ─── SCREENS ───
+function show(id){
+  ['home','quiz','results'].forEach(function(s){document.getElementById(s).classList.toggle('active',s===id);});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function goHome(){show('home');buildGrid();}
+
+// ─── GRID ───
+function buildGrid(){
+  var g=document.getElementById('topicsGrid');g.innerHTML='';
+  TOPICS.forEach(function(t){
+    var done=topicDone[t.id]||0,total=t.qids.length,pct=total?Math.round(done/total*100):0;
+    var d=document.createElement('div');d.className='topic-card';d.style.setProperty('--tc',t.color);
+    d.innerHTML='<span class="t-icon">'+t.icon+'</span><div class="t-name">'+t.name+'</div><div class="t-count">'+done+'/'+total+' tamamlandı</div><div class="t-bar"><div class="t-bar-fill" style="width:'+pct+'%;background:'+t.color+'"></div></div>';
+    (function(tid){d.onclick=function(){startTopic(tid);};})(t.id);
+    g.appendChild(d);
+  });
+}
+
+// ─── SHUFFLE ───
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=a[i];a[i]=a[j];a[j]=tmp;}return a;}
+
+// ─── START ───
+function startTopic(id){
+  var t=TOPICS.filter(function(x){return x.id===id;})[0];
+  queue=shuffle(t.qids.map(function(i){return Q[i];}));
+  beginQuiz();
+}
+function startAll(){queue=shuffle(Q.slice());beginQuiz();}
+function retryWrong(){
+  queue=shuffle(wrongIds.map(function(id){return Q.filter(function(q){return q.id===id;})[0];}).filter(Boolean));
+  beginQuiz();
+}
+function beginQuiz(){
+  qi=0;wrongIds=[];corr=0;wrng=0;streak=0;bestStreak=0;xp=0;
+  updateHUD();buildDots();show('quiz');renderQ();
+}
+
+// ─── DOTS ───
+function buildDots(){
+  var d=document.getElementById('qDots');d.innerHTML='';
+  queue.forEach(function(_,i){var el=document.createElement('div');el.className='q-dot'+(i===0?' da':'');el.id='dot'+i;d.appendChild(el);});
+  document.getElementById('qInfo').textContent='Soru 1 / '+queue.length;
+}
+function advanceDot(i){
+  var el=document.getElementById('dot'+i);if(el)el.className='q-dot dc';
+  var nx=document.getElementById('dot'+(i+1));if(nx)nx.className='q-dot da';
+  document.getElementById('qInfo').textContent='Soru '+Math.min(i+2,queue.length)+' / '+queue.length;
+}
+
+// ─── RENDER ───
+function renderQ(){
+  if(qi>=queue.length){showResults();return;}
+  var q=queue[qi];
+  var topicObj=TOPICS.filter(function(t){return t.id===q.topic;})[0];
+  var typeLabel={mcq:'🔘 Çoktan Seçmeli',fill:'✏️ Boşluk Doldur',open:'📝 Açık Uçlu',match:'🔗 Eşleştirme',order:'📋 Sırala'}[q.type];
+  var typeCls={mcq:'bm',fill:'bf',open:'bo',match:'bmt',order:'bor'}[q.type];
+  var card=document.createElement('div');card.className='q-card';
+  var noteHtml=q.note?'<div class="q-note">'+q.note+'</div>':'';
+  card.innerHTML=
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;">'+
+      '<span class="q-type-badge '+typeCls+'">'+typeLabel+'</span>'+
+      '<span class="topic-tag">'+topicObj.icon+' '+topicObj.name+'</span>'+
+    '</div>'+
+    '<div class="q-num">Soru '+(qi+1)+' / '+queue.length+'</div>'+
+    '<div class="q-text">'+q.text+'</div>'+
+    noteHtml+
+    '<div id="qBody"></div>'+
+    '<div class="feedback" id="feedback"></div>'+
+    '<div class="btn-row" id="btnRow"></div>';
+  var arena=document.getElementById('arena');arena.innerHTML='';arena.appendChild(card);
+  var body=document.getElementById('qBody');
+  if(q.type==='mcq') renderMCQ(q,body);
+  else if(q.type==='fill') renderFill(q,body);
+  else if(q.type==='open') renderOpen(q,body);
+  else if(q.type==='match') renderMatch(q,body);
+  else if(q.type==='order') renderOrder(q,body);
+}
+
+// ─── MCQ ───
+function renderMCQ(q,body){
+  var wrap=document.createElement('div');wrap.className='options';
+  ['A','B','C','D'].slice(0,q.opts.length).forEach(function(ltr,i){
+    var el=document.createElement('div');el.className='opt';el.id='opt'+i;
+    el.innerHTML='<span class="opt-letter">'+ltr+'</span><span>'+q.opts[i]+'</span>';
+    (function(idx){el.onclick=function(){checkMCQ(q,idx);};})(i);
+    wrap.appendChild(el);
+  });
+  body.appendChild(wrap);
+}
+function checkMCQ(q,chosen){
+  var opts=document.querySelectorAll('.opt');
+  opts.forEach(function(o){o.classList.add('disabled');o.onclick=null;});
+  if(chosen===q.cor){opts[chosen].classList.add('cor');markCorrect(q,20);}
+  else{opts[chosen].classList.add('wrn');opts[q.cor].classList.add('rev');markWrong(q);}
+  showFB(q,chosen===q.cor);addNext();
+}
+
+// ─── FILL ───
+function renderFill(q,body){
+  if(q.hint){
+    var hb=document.createElement('button');hb.className='hint-btn';hb.textContent='💡 İpucu Göster';
+    var hbox=document.createElement('div');hbox.className='hint-box';hbox.textContent=q.hint;
+    hb.onclick=function(){hbox.classList.toggle('show');hb.textContent=hbox.classList.contains('show')?'💡 İpucuyu Gizle':'💡 İpucu Göster';};
+    body.appendChild(hb);body.appendChild(hbox);
+  }
+  var inp=document.createElement('input');inp.type='text';inp.className='fill-input';inp.placeholder='Cevabınızı yazın…';inp.id='fi';
+  body.appendChild(inp);
+  var btn=document.createElement('button');btn.className='btn btn-primary';btn.textContent='✅ Kontrol Et';
+  btn.onclick=function(){checkFill(q,inp,btn);};
+  inp.onkeydown=function(e){if(e.key==='Enter')checkFill(q,inp,btn);};
+  document.getElementById('btnRow').appendChild(btn);
+  setTimeout(function(){inp.focus();},120);
+}
+function checkFill(q,inp,btn){
+  if(inp.disabled)return;
+  inp.disabled=true;btn.disabled=true;
+  var val=inp.value.trim().toLowerCase();
+  var ans=q.answer.toLowerCase();
+  var alts=(q.alts||[]).map(function(a){return a.toLowerCase();});
+  var ok=val===ans||alts.indexOf(val)>=0||(val.length>2&&(ans.indexOf(val)>=0||val.indexOf(ans)>=0));
+  inp.classList.add(ok?'cor':'wrn');
+  if(!ok)inp.value=q.answer;
+  if(ok)markCorrect(q,15);else markWrong(q);
+  btn.remove();showFB(q,ok);addNext();
+}
+
+// ─── OPEN ───
+function renderOpen(q,body){
+  var hb=document.createElement('button');hb.className='hint-btn';hb.textContent='💡 İpucu Göster';
+  var hbox=document.createElement('div');hbox.className='hint-box';hbox.textContent=q.hint;
+  hb.onclick=function(){hbox.classList.toggle('show');hb.textContent=hbox.classList.contains('show')?'💡 İpucuyu Gizle':'💡 İpucu Göster';};
+  body.appendChild(hb);body.appendChild(hbox);
+  var ta=document.createElement('textarea');ta.className='open-ta';ta.placeholder='Cevabınızı buraya yazın…';
+  body.appendChild(ta);
+  var btn=document.createElement('button');btn.className='btn btn-primary';btn.textContent='📋 Model Cevabı Gör';
+  btn.onclick=function(){showOpen(q,ta,btn);};
+  document.getElementById('btnRow').appendChild(btn);
+}
+function showOpen(q,ta,btn){
+  ta.disabled=true;btn.remove();
+  var fb=document.getElementById('feedback');
+  fb.className='feedback fb-model vis';
+  fb.innerHTML='<span class="fb-icon">📋</span><div class="fb-body">Kendi cevabınızla karşılaştırın:<div class="model-box">'+q.model.replace(/\n/g,'<br>')+'</div></div>';
+  var row=document.getElementById('btnRow');
+  var bc=document.createElement('button');bc.className='btn btn-lime';bc.textContent='✅ Doğru anlamıştım';
+  var bw=document.createElement('button');bw.className='btn btn-ghost';bw.textContent='❌ Eksik/Yanlış';
+  bc.onclick=function(){markCorrect(q,10);bc.remove();bw.remove();addNext();};
+  bw.onclick=function(){markWrong(q);bc.remove();bw.remove();addNext();};
+  row.appendChild(bc);row.appendChild(bw);
+}
+
+// ─── MATCH ───
+function renderMatch(q,body){
+  mSel={left:null,right:null,matched:[]};
+  var li=shuffle(q.pairs.map(function(_,i){return i;}));
+  var ri=shuffle(q.pairs.map(function(_,i){return i;}));
+  var grid=document.createElement('div');grid.className='match-grid';
+  var lWrap=document.createElement('div');lWrap.innerHTML='<div class="match-col-title">Sol</div>';
+  var lCol=document.createElement('div');lCol.className='match-col';
+  li.forEach(function(idx){
+    var el=document.createElement('div');el.className='match-item';el.dataset.idx=idx;el.dataset.side='left';
+    el.textContent=q.pairs[idx].left;(function(e){e.onclick=function(){matchClick(e,q);};})(el);lCol.appendChild(el);
+  });
+  lWrap.appendChild(lCol);
+  var rWrap=document.createElement('div');rWrap.innerHTML='<div class="match-col-title">Sağ</div>';
+  var rCol=document.createElement('div');rCol.className='match-col';
+  ri.forEach(function(idx){
+    var el=document.createElement('div');el.className='match-item';el.dataset.idx=idx;el.dataset.side='right';
+    el.textContent=q.pairs[idx].right;(function(e){e.onclick=function(){matchClick(e,q);};})(el);rCol.appendChild(el);
+  });
+  rWrap.appendChild(rCol);
+  grid.appendChild(lWrap);grid.appendChild(rWrap);body.appendChild(grid);
+}
+function matchClick(el,q){
+  if(el.classList.contains('mok'))return;
+  var side=el.dataset.side;
+  document.querySelectorAll('.match-item.msel').forEach(function(e){if(e.dataset.side===side)e.classList.remove('msel');});
+  el.classList.add('msel');
+  if(side==='left')mSel.left=el;else mSel.right=el;
+  if(mSel.left&&mSel.right){
+    var li=parseInt(mSel.left.dataset.idx),ri=parseInt(mSel.right.dataset.idx);
+    if(li===ri){
+      mSel.left.classList.remove('msel');mSel.left.classList.add('mok');
+      mSel.right.classList.remove('msel');mSel.right.classList.add('mok');
+      mSel.matched.push(li);mSel.left=null;mSel.right=null;
+      if(mSel.matched.length===q.pairs.length){
+        markCorrect(q,25);showFB(q,true);addNext();
+        document.querySelectorAll('.match-item:not(.mok)').forEach(function(e){e.onclick=null;});
+      }
+    } else {
+      var ml=mSel.left,mr=mSel.right;
+      ml.classList.remove('msel');ml.classList.add('mno');
+      mr.classList.remove('msel');mr.classList.add('mno');
+      mSel.left=null;mSel.right=null;
+      setTimeout(function(){ml.classList.remove('mno');mr.classList.remove('mno');},400);
+    }
+  }
+}
+
+// ─── ORDER ───
+function renderOrder(q,body){
+  var perm=shuffle(q.correctOrder.map(function(_,i){return i;}));
+  var list=document.createElement('ul');list.className='order-list';list.id='ol';
+  perm.forEach(function(origPos){
+    var li=document.createElement('li');li.className='order-item';li.draggable=true;li.dataset.orig=origPos;
+    li.innerHTML='<span class="drag-handle">⠿</span><span>'+q.items[origPos]+'</span>';
+    list.appendChild(li);
+  });
+  body.appendChild(list);initDrag(list);
+  var btn=document.createElement('button');btn.className='btn btn-primary';btn.textContent='✅ Sırayı Kontrol Et';
+  btn.onclick=function(){checkOrder(q,list,btn);};
+  document.getElementById('btnRow').appendChild(btn);
+}
+function initDrag(list){
+  list.querySelectorAll('.order-item').forEach(function(item){
+    item.addEventListener('dragstart',function(){draggedEl=item;setTimeout(function(){item.classList.add('dragging');},0);});
+    item.addEventListener('dragend',function(){item.classList.remove('dragging');draggedEl=null;list.querySelectorAll('.order-item').forEach(function(i){i.classList.remove('over-el');});});
+    item.addEventListener('dragover',function(e){e.preventDefault();if(draggedEl&&draggedEl!==item)item.classList.add('over-el');});
+    item.addEventListener('dragleave',function(){item.classList.remove('over-el');});
+    item.addEventListener('drop',function(e){e.preventDefault();item.classList.remove('over-el');if(draggedEl&&draggedEl!==item)list.insertBefore(draggedEl,item);});
+  });
+}
+function checkOrder(q,list,btn){
+  var items=list.querySelectorAll('.order-item');
+  var userOrder=Array.from(items).map(function(i){return parseInt(i.dataset.orig);});
+  var allOk=userOrder.every(function(v,i){return v===q.correctOrder[i];});
+  items.forEach(function(item,i){
+    item.draggable=false;item.classList.add('locked');
+    item.classList.add(parseInt(item.dataset.orig)===q.correctOrder[i]?'oc':'ow');
+  });
+  btn.remove();if(allOk)markCorrect(q,20);else markWrong(q);
+  showFB(q,allOk);addNext();
+}
+
+// ─── FEEDBACK ───
+function showFB(q,ok){
+  if(q.type==='open')return;
+  var fb=document.getElementById('feedback');
+  if(ok){
+    var msgs=['🎉 Harika! Doğru!','⚡ Mükemmel!','🌟 Süpersin!','🔥 Muhteşem!','✅ Tam isabet!'];
+    fb.className='feedback fb-cor vis';
+    fb.innerHTML='<span class="fb-icon">'+msgs[Math.floor(Math.random()*msgs.length)]+'</span><div class="fb-body"><strong>Açıklama:</strong> '+q.exp+'</div>';
+  } else {
+    fb.className='feedback fb-wrn vis';
+    fb.innerHTML='<span class="fb-icon">💡</span><div class="fb-body"><strong>Doğru cevap:</strong> '+q.exp+'</div>';
+  }
+}
+
+// ─── NEXT ───
+function addNext(){
+  var row=document.getElementById('btnRow');
+  if(row.querySelector('.next-btn'))return;
+  var isLast=qi===queue.length-1;
+  var btn=document.createElement('button');btn.className='btn btn-lime next-btn';
+  btn.textContent=isLast?'🏁 Sonuçları Gör':'➡️ Sonraki Soru';
+  btn.onclick=function(){advanceDot(qi);qi++;renderQ();window.scrollTo({top:0,behavior:'smooth'});};
+  row.appendChild(btn);
+}
+
+// ─── SCORING ───
+function markCorrect(q,pts){
+  streak++;if(streak>bestStreak)bestStreak=streak;corr++;
+  var bonus=streak>=3?Math.floor(pts*.5):0;xp+=pts+bonus;
+  var t=TOPICS.filter(function(x){return x.id===q.topic;})[0];
+  if(t)topicDone[t.id]=(topicDone[t.id]||0)+1;
+  toast(bonus>0?'✅ Doğru! +'+pts+' XP  🔥 +'+bonus+' bonus!':'✅ Doğru! +'+pts+' XP','t-cor');
+  updateHUD();
+}
+function markWrong(q){
+  streak=0;wrng++;if(wrongIds.indexOf(q.id)<0)wrongIds.push(q.id);
+  toast('❌ Yanlış! Açıklamayı oku.','t-wrn');updateHUD();
+}
+
+// ─── TOAST ───
+function toast(msg,cls){
+  var el=document.createElement('div');el.className='toast '+cls;el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(function(){el.remove();},2500);
+}
+
+// ─── RESULTS ───
+function showResults(){
+  show('results');
+  var total=queue.length,pct=Math.round(corr/(total||1)*100);
+  var titles=['😢 Biraz Daha Çalış!','💪 İyi Gidiyorsun!','🌟 Harika!','🏆 Mükemmel!'];
+  var subs=['Merak etme, pratik yaparsan gelişirsin.','Azıcık daha ve çok iyi olacaksın!','Gerçekten iyi bir performans!','Tüm konuları özümsedin!'];
+  var idx=pct<40?0:pct<65?1:pct<90?2:3;
+  document.getElementById('resTitle').textContent=titles[idx];
+  document.getElementById('resSub').textContent=subs[idx];
+  document.getElementById('resPct').textContent=pct+'%';
+  var color=pct<40?'#F87171':pct<65?'#FDE047':pct<90?'#2DD4BF':'#C084FC';
+  var ring=document.getElementById('scoreRing');
+  ring.style.borderColor=color;ring.style.boxShadow='0 0 26px '+color+'55';
+  document.getElementById('resPct').style.color=color;
+  document.getElementById('rC').textContent=corr;document.getElementById('rW').textContent=wrng;
+  document.getElementById('rX').textContent=xp;document.getElementById('rS').textContent=bestStreak;
+  document.getElementById('retryBtn').style.display=wrongIds.length?'flex':'none';
+  buildBadges(pct);if(pct>=70)confetti();
+}
+function buildBadges(pct){
+  var list=[];
+  if(pct===100)list.push({i:'🏆',l:'Mükemmel Skor'});
+  if(bestStreak>=5)list.push({i:'🔥',l:'Seri x'+bestStreak});
+  if(corr>=10)list.push({i:'⭐',l:'10+ Doğru'});
+  if(xp>=150)list.push({i:'⚡',l:'150+ XP'});
+  var div=document.getElementById('earnedBadges');div.innerHTML='';
+  if(list.length){
+    div.innerHTML='<div style="width:100%;text-align:center;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">🎖️ Kazanılan Rozetler</div>';
+    list.forEach(function(b){div.innerHTML+='<div class="res-badge" style="border-color:rgba(0,210,255,.25);"><span class="rb-icon">'+b.i+'</span><span class="rb-lbl">'+b.l+'</span></div>';});
+  }
+}
+function confetti(){
+  var cols=['#00D2FF','#A8FF3E','#C084FC','#F472B6','#FB923C','#2DD4BF'];
+  for(var i=0;i<60;i++){
+    var el=document.createElement('div');el.className='cf';
+    el.style.cssText='left:'+(Math.random()*100)+'%;background:'+cols[Math.floor(Math.random()*cols.length)]+';--d:'+(2.5+Math.random()*2.5)+'s;--dl:'+(Math.random()*1.2)+'s;transform:rotate('+(Math.random()*360)+'deg)';
+    document.body.appendChild(el);
+    (function(e){setTimeout(function(){e.remove();},5000);})(el);
+  }
+}
+
+// ─── EVENTS ───
+document.getElementById('btnAll').onclick=function(){startAll();};
+document.getElementById('btnBack').onclick=function(){goHome();};
+document.getElementById('retryBtn').onclick=function(){retryWrong();};
+document.getElementById('btnHome2').onclick=function(){goHome();};
+
+// ─── INIT ───
+buildGrid();updateHUD();
+</script>
+</body>
+</html>
