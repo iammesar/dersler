@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BT Sınav Kampı – 5. Sınıf</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0F0F1A; --card:#1A1A2E;
+  --orange:#FF6B35; --yellow:#FFD166; --teal:#06D6A0;
+  --blue:#118AB2; --pink:#EF476F; --purple:#9B5DE5;
+  --text:#F0F0F0; --muted:#8892A4; --border:rgba(255,255,255,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:.15;transform:scale(1);}50%{opacity:.7;transform:scale(1.5);}}
+
+/* HUD */
+.hud{position:sticky;top:0;z-index:100;background:rgba(15,15,26,.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.hud-xp{flex:1;min-width:150px;}
+.hud-xp-label{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--yellow);text-transform:uppercase;margin-bottom:4px;display:flex;justify-content:space-between;}
+.xp-track{height:8px;background:rgba(255,255,255,.08);border-radius:30px;overflow:hidden;}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--yellow));border-radius:30px;transition:width .5s ease;width:0%;}
+.hud-stats{display:flex;gap:8px;flex-wrap:wrap;}
+.stat-pill{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;}
+.stat-pill .val{font-family:'Fredoka One',cursive;font-size:16px;}
+.cv{color:var(--teal);} .wv{color:var(--pink);} .sv{color:var(--yellow);}
+
+/* SCREENS */
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* HOME */
+header{position:relative;z-index:1;text-align:center;padding:38px 20px 26px;}
+.logo{font-family:'Fredoka One',cursive;font-size:clamp(26px,6vw,50px);background:linear-gradient(135deg,#FF6B35,#FFD166,#06D6A0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.15;}
+.subtitle{color:var(--muted);font-size:14px;font-weight:700;margin-top:6px;letter-spacing:1px;}
+.container{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:20px 16px 60px;}
+.sec-label{font-family:'Fredoka One',cursive;font-size:18px;color:var(--muted);margin-bottom:14px;}
+.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:22px;}
+.topic-card{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:18px 14px;cursor:pointer;text-align:center;transition:transform .2s,border-color .2s,box-shadow .2s;}
+.topic-card:hover{transform:translateY(-4px);border-color:var(--tc,var(--orange));box-shadow:0 8px 24px rgba(0,0,0,.35);}
+.t-icon{font-size:32px;display:block;margin-bottom:8px;}
+.t-name{font-weight:800;font-size:13px;line-height:1.4;}
+.t-count{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600;}
+.t-bar{height:4px;background:rgba(255,255,255,.08);border-radius:10px;margin-top:10px;overflow:hidden;}
+.t-bar-fill{height:100%;border-radius:10px;background:var(--tc,var(--orange));width:0%;transition:width .4s;}
+.btn-all{display:block;margin:0 auto;padding:14px 34px;background:linear-gradient(135deg,var(--orange),#FF9A5C);color:#fff;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 18px rgba(255,107,53,.4);transition:transform .2s,box-shadow .2s;}
+.btn-all:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(255,107,53,.5);}
+
+/* QUIZ */
+.quiz-top{position:relative;z-index:1;max-width:750px;margin:0 auto;padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.btn-back{background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:8px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:background .2s;}
+.btn-back:hover{background:rgba(255,255,255,.12);}
+.q-info{font-size:13px;color:var(--muted);font-weight:700;}
+.q-dots{display:flex;gap:5px;flex-wrap:wrap;max-width:300px;}
+.q-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12);transition:background .3s,transform .3s;flex-shrink:0;}
+.q-dot.dc{background:var(--teal);}
+.q-dot.dw{background:var(--pink);}
+.q-dot.da{background:var(--yellow);transform:scale(1.5);}
+
+#arena{position:relative;z-index:1;max-width:750px;margin:0 auto;padding:14px 16px 80px;}
+
+/* Q CARD */
+.q-card{background:var(--card);border:1.5px solid var(--border);border-radius:22px;padding:24px 20px;margin-bottom:14px;animation:slideIn .3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.q-type-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:12px;}
+.bm{background:rgba(155,93,229,.18);color:var(--purple);border:1px solid rgba(155,93,229,.3);}
+.bf{background:rgba(6,214,160,.18);color:var(--teal);border:1px solid rgba(6,214,160,.3);}
+.bo{background:rgba(17,138,178,.18);color:#60C6E8;border:1px solid rgba(17,138,178,.3);}
+.bmt{background:rgba(255,209,102,.18);color:var(--yellow);border:1px solid rgba(255,209,102,.3);}
+.bor{background:rgba(255,107,53,.18);color:var(--orange);border:1px solid rgba(255,107,53,.3);}
+.topic-tag{float:right;font-size:11px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.05);padding:3px 10px;border-radius:20px;}
+.q-num{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;}
+.q-text{font-size:16px;font-weight:700;line-height:1.65;margin-bottom:20px;color:#EEF2FF;clear:both;}
+
+/* MCQ */
+.options{display:grid;gap:9px;}
+.opt{background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.09);border-radius:13px;padding:13px 16px;cursor:pointer;display:flex;align-items:flex-start;gap:11px;transition:all .2s;font-weight:600;font-size:14px;text-align:left;line-height:1.5;width:100%;}
+.opt:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2);transform:translateX(3px);}
+.opt.disabled{cursor:default;pointer-events:none;}
+.opt.cor{border-color:var(--teal)!important;background:rgba(6,214,160,.12)!important;}
+.opt.wrn{border-color:var(--pink)!important;background:rgba(239,71,111,.12)!important;animation:shake .3s ease;}
+.opt.rev{border-color:var(--teal)!important;background:rgba(6,214,160,.05)!important;}
+@keyframes shake{0%,100%{transform:translateX(0);}30%{transform:translateX(-6px);}70%{transform:translateX(6px);}}
+.opt-letter{min-width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.09);display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;font-size:13px;flex-shrink:0;}
+
+/* FILL */
+.hint-btn{background:none;border:1px dashed rgba(255,209,102,.4);border-radius:10px;color:var(--yellow);padding:7px 14px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;margin-bottom:10px;transition:background .2s;}
+.hint-btn:hover{background:rgba(255,209,102,.1);}
+.hint-box{background:rgba(255,209,102,.07);border:1px dashed rgba(255,209,102,.3);border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:13px;font-weight:600;color:#FFE08A;line-height:1.6;display:none;}
+.hint-box.show{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.fill-input{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14);border-radius:12px;padding:11px 16px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;width:100%;max-width:420px;outline:none;transition:border-color .2s;display:block;margin-bottom:8px;}
+.fill-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(6,214,160,.12);}
+.fill-input.cor{border-color:var(--teal);background:rgba(6,214,160,.1);}
+.fill-input.wrn{border-color:var(--pink);background:rgba(239,71,111,.1);}
+
+/* OPEN */
+.open-ta{width:100%;background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;resize:vertical;min-height:110px;outline:none;transition:border-color .2s;line-height:1.6;display:block;}
+.open-ta:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(17,138,178,.15);}
+
+/* MATCH */
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.match-col-title{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:center;}
+.match-col{display:flex;flex-direction:column;gap:8px;}
+.match-item{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.09);border-radius:12px;padding:10px 14px;cursor:pointer;font-size:13px;font-weight:700;text-align:center;transition:all .2s;min-height:46px;display:flex;align-items:center;justify-content:center;line-height:1.4;}
+.match-item:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);}
+.match-item.msel{border-color:var(--purple);background:rgba(155,93,229,.15);}
+.match-item.mok{border-color:var(--teal);background:rgba(6,214,160,.1);cursor:default;pointer-events:none;}
+.match-item.mno{border-color:var(--pink);animation:shake .35s ease;}
+
+/* ORDER */
+.order-list{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.order-item{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.09);border-radius:12px;padding:12px 16px;cursor:grab;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700;transition:border-color .2s,background .2s;user-select:none;}
+.order-item:hover{background:rgba(255,255,255,.09);}
+.order-item.dragging{opacity:.3;cursor:grabbing;}
+.order-item.over-el{border-color:var(--orange);background:rgba(255,107,53,.1);}
+.order-item.oc{border-color:var(--teal);background:rgba(6,214,160,.1);}
+.order-item.ow{border-color:var(--pink);background:rgba(239,71,111,.08);}
+.order-item.locked{cursor:default;}
+.drag-handle{color:var(--muted);font-size:18px;flex-shrink:0;}
+
+/* FEEDBACK */
+.feedback{border-radius:14px;padding:14px 18px;margin-top:14px;display:none;gap:11px;align-items:flex-start;}
+.feedback.vis{display:flex;animation:fadeIn .3s ease;}
+.fb-cor{background:rgba(6,214,160,.1);border:1px solid rgba(6,214,160,.3);}
+.fb-wrn{background:rgba(239,71,111,.1);border:1px solid rgba(239,71,111,.3);}
+.fb-model{background:rgba(17,138,178,.1);border:1px solid rgba(17,138,178,.25);}
+.fb-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.fb-body{font-size:14px;font-weight:600;line-height:1.7;color:#DDE6FF;}
+.fb-body strong{color:var(--teal);}
+.model-box{margin-top:8px;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:10px;font-size:13px;color:#C8D6FF;line-height:1.7;}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.btn{padding:11px 22px;border-radius:12px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;transition:transform .2s,box-shadow .2s;display:inline-flex;align-items:center;gap:6px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-primary{background:linear-gradient(135deg,var(--orange),#FF9A5C);color:#fff;box-shadow:0 4px 14px rgba(255,107,53,.35);}
+.btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(255,107,53,.5);}
+.btn-teal{background:linear-gradient(135deg,var(--teal),#04B086);color:#0A2A22;box-shadow:0 4px 14px rgba(6,214,160,.3);}
+.btn-teal:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(6,214,160,.45);}
+.btn-ghost{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{background:rgba(255,255,255,.12);}
+
+/* RESULTS */
+.results-wrap{max-width:660px;margin:0 auto;padding:40px 20px 80px;text-align:center;position:relative;z-index:1;}
+.res-title{font-family:'Fredoka One',cursive;font-size:42px;margin-bottom:6px;}
+.res-sub{color:var(--muted);font-size:15px;font-weight:700;margin-bottom:26px;}
+.score-ring{width:148px;height:148px;border-radius:50%;border:6px solid var(--teal);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 26px;}
+.score-pct{font-family:'Fredoka One',cursive;font-size:46px;line-height:1;}
+.score-lbl{font-size:12px;font-weight:700;color:var(--muted);}
+.res-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px;}
+.res-badge{background:rgba(255,255,255,.06);border:1.5px solid var(--border);border-radius:14px;padding:12px 18px;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.rb-icon{font-size:24px;}
+.rb-val{font-family:'Fredoka One',cursive;font-size:20px;}
+.rb-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+
+/* TOAST */
+.toast{position:fixed;top:66px;right:16px;z-index:9999;padding:11px 18px;border-radius:12px;font-weight:800;font-size:13px;display:flex;align-items:center;gap:7px;box-shadow:0 8px 28px rgba(0,0,0,.4);pointer-events:none;animation:toastIn .35s cubic-bezier(.34,1.56,.64,1),toastOut .3s ease 2.1s forwards;}
+.t-cor{background:linear-gradient(135deg,#06D6A0,#04B086);color:#0A2A22;}
+.t-wrn{background:linear-gradient(135deg,#EF476F,#C0364F);color:#fff;}
+@keyframes toastIn{from{opacity:0;transform:translateX(60px) scale(.8);}to{opacity:1;transform:translateX(0) scale(1);}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateX(60px);}}
+
+/* CONFETTI */
+.cf{position:fixed;top:-10px;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:9999;animation:cfFall var(--d,3s) ease-in var(--dl,0s) forwards;}
+@keyframes cfFall{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="hud">
+  <div class="hud-xp">
+    <div class="hud-xp-label"><span>⚡ XP</span><span id="xpNum">0 XP</span></div>
+    <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+  </div>
+  <div class="hud-stats">
+    <div class="stat-pill">✅ <span class="val cv" id="sc">0</span></div>
+    <div class="stat-pill">❌ <span class="val wv" id="sw">0</span></div>
+    <div class="stat-pill">🔥 <span class="val sv" id="ss">0</span></div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <header>
+    <div class="logo">🖥️ BT Sınav Kampı</div>
+    <div class="subtitle">5. Sınıf · 2. Dönem 1. Yazılı Hazırlık</div>
+  </header>
+  <div class="container">
+    <div class="sec-label">📍 Hangi konudan başlayalım?</div>
+    <div class="topics-grid" id="topicsGrid"></div>
+    <button class="btn-all" id="btnAll">🚀 Tüm Konular – Karma Mod</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="quiz-top">
+    <button class="btn-back" id="btnBack">← Ana Sayfa</button>
+    <div class="q-info" id="qInfo">Soru 1 / 10</div>
+    <div class="q-dots" id="qDots"></div>
+  </div>
+  <div id="arena"></div>
+</div>
+
+<!-- RESULTS -->
+<div id="results" class="screen">
+  <div class="results-wrap">
+    <div class="res-title" id="resTitle">🎉</div>
+    <div class="res-sub" id="resSub"></div>
+    <div class="score-ring" id="scoreRing">
+      <div class="score-pct" id="resPct">0%</div>
+      <div class="score-lbl">başarı</div>
+    </div>
+    <div class="res-badges">
+      <div class="res-badge"><span class="rb-icon">✅</span><span class="rb-val" id="rC">0</span><span class="rb-lbl">Doğru</span></div>
+      <div class="res-badge"><span class="rb-icon">❌</span><span class="rb-val" id="rW">0</span><span class="rb-lbl">Yanlış</span></div>
+      <div class="res-badge"><span class="rb-icon">⚡</span><span class="rb-val" id="rX">0</span><span class="rb-lbl">XP</span></div>
+      <div class="res-badge"><span class="rb-icon">🔥</span><span class="rb-val" id="rS">0</span><span class="rb-lbl">En İyi Seri</span></div>
+    </div>
+    <div class="res-badges" id="earnedBadges"></div>
+    <div class="btn-row" style="justify-content:center;margin-top:8px;">
+      <button class="btn btn-teal" id="retryBtn" style="display:none;">🔁 Yanlışları Tekrar Et</button>
+      <button class="btn btn-primary" id="btnHome2">🏠 Ana Sayfa</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── TOPICS ───
+var TOPICS = [
+  {id:'security', name:'Siber Güvenlik & Etik', icon:'🔐', color:'#FF6B35', qids:[0,1,2,3,4,5,6,7,8,9,10]},
+  {id:'tech',     name:'Teknoloji Bağımlılığı', icon:'📱', color:'#EF476F', qids:[11]},
+  {id:'ai',       name:'Yapay Zekâ',            icon:'🤖', color:'#9B5DE5', qids:[12,13,14,15,16,17]},
+  {id:'data',     name:'Veri & Problem',         icon:'🔢', color:'#118AB2', qids:[18,19,20,21]},
+  {id:'algo',     name:'Algoritma',              icon:'⚙️', color:'#06D6A0', qids:[22,23,24,25,26,27,28]}
+];
+
+// ─── QUESTIONS ───
+var Q = [
+  {id:0,topic:'security',type:'mcq',
+   text:'Ali, bir oyun sitesine adını, soyadını, okulunu ve telefon numarasını yazdı. Bu durum hakkında hangisi doğrudur?',
+   opts:['Bu bilgilerin hepsini paylaşmak güvenlidir.',
+         'Sadece telefon numarasını paylaşmak yanlıştır.',
+         'Kişisel bilgileri tanımadığı sitelere vermek siber güvenlik açısından tehlikelidir.',
+         'Okul adını yazmak sorun değildir.'],
+   cor:2,
+   exp:'Oyun sitelerine gerçek ad, okul ve telefon verilmemelidir. Bu bilgiler kötü niyetli kişilerce suistimal edilebilir; takma ad yeterlidir.'},
+
+  {id:1,topic:'security',type:'mcq',
+   text:'Güvenli bir web sitesinin adres çubuğunda ne bulunur?',
+   opts:['http://','https:// ve kilit simgesi 🔒','www.','ftp://'],
+   cor:1,
+   exp:'HTTPS verileri şifreler; kilit simgesi güvenli bağlantının göstergesidir. HTTP kullanan sitelerde kişisel bilgi paylaşılmamalıdır.'},
+
+  {id:2,topic:'security',type:'fill',
+   text:'Hesaplarımızı korumak için büyük-küçük harf, rakam ve özel karakter içeren en az 8 karakterlik ___ kullanmalıyız.',
+   answer:'şifre', alts:['güçlü şifre','parola','güçlü parola'],
+   hint:'Hesabınıza giriş yaparken kullandığınız gizli kelime nedir?',
+   exp:'Güçlü şifre: en az 8 karakter, büyük+küçük harf, rakam ve özel karakter (!@#) içermeli; isim veya doğum tarihi içermemelidir.'},
+
+  {id:3,topic:'security',type:'mcq',
+   text:'"Hediye kazandın! Kargo bilgilerini girmek için tıkla" diyen bir mesaj aldın. Ne yapmalısın?',
+   opts:['Hemen bağlantıya tıklamalıyım.',
+         'Bağlantıya tıklamamalı, güvendiğim büyüğüme söylemeli ve mesajı silmeliyim.',
+         'Bilgilerimi girip hediyemi beklemelidir.',
+         'Arkadaşlarıma iletmeliyim.'],
+   cor:1,
+   exp:'"Kimlik avı (phishing)" saldırısıdır. Tanımadığınız kişilerden gelen bağlantılara asla tıklanmamalı; güvenilen büyüklere haber verilmelidir.'},
+
+  {id:4,topic:'security',type:'mcq',
+   text:'Zeynep, arkadaşının fotoğrafını izni olmadan sosyal medyada paylaştı. Bu davranış hakkında ne söylenebilir?',
+   opts:['Sadece bir şaka olduğu için sorun değildir.',
+         'Fotoğraf herkese açık değilse paylaşılabilir.',
+         'Bu davranış mahremiyet hakkını ihlal eder ve bilişim etiğine aykırıdır.',
+         'Beğeni alması arkadaşını mutlu eder.'],
+   cor:2,
+   exp:'Başkasının görüntüsünü paylaşmak için mutlaka izin alınmalıdır. İzinsiz paylaşım mahremiyet ihlali ve siber zorbalık sayılabilir.'},
+
+  {id:5,topic:'security',type:'mcq',
+   text:'Aşağıdakilerden hangisi ZAYIF bir şifredir?',
+   opts:['Mav1!Bulut@47','Kx#9mPqL@2','fatma123','R!v3r&Sky99'],
+   cor:2,
+   exp:'"fatma123" hem isim içerdiğinden hem de yalnızca harf+rakamdan oluştuğundan zayıftır. Güçlü şifre karmaşık ve tahmin edilemez olmalıdır.'},
+
+  {id:6,topic:'security',type:'open',
+   text:'İnternetten bulduğu bir ödevi hiç değiştirmeden kendi ödevi gibi teslim eden öğrencinin davranışını etik açıdan değerlendiriniz.',
+   hint:'İntihal, telif hakkı, kendi emeği olmayan içerik… Bu davranış etik ve yasal açıdan ne ifade eder?',
+   model:'Bu davranış intihal (kopyacılık) olarak adlandırılır ve etik değildir. Başkasının emeğini izin almadan kullanmak fikri hırsızlıktır; telif hakkını ihlal eder ve öğrencinin kendi gelişim fırsatını ortadan kaldırır.'},
+
+  {id:7,topic:'security',type:'open',
+   text:'Deniz, okul bilgisayarında e-posta hesabını açık bırakıp çıkmadan ayrıldı. Bu durumun doğurabileceği en az iki sorunu yazınız.',
+   hint:'Başka biri o bilgisayara otursa ne olabilir? Hesabına yetkisiz erişim sağlanırsa ne yapabilirler?',
+   model:'1) Başkası hesaba girerek kişisel e-postaları okuyabilir.\n2) Deniz adına sahte mesajlar gönderilebilir.\n3) Hesap bilgileri değiştirilerek hesap ele geçirilebilir.'},
+
+  {id:8,topic:'security',type:'mcq',
+   text:'Kerem, antivirüs "şüpheli dosya" uyarısına rağmen ücretsiz oyunu yükledi. En olası sonuç nedir?',
+   opts:['Oyun sorunsuz çalışır.',
+         'Antivirüs yanlış alarm vermiş olabilir.',
+         'Zararlı yazılım (virüs/malware) bilgisayara bulaşabilir.',
+         'İnternet bağlantısı kesilir.'],
+   cor:2,
+   exp:'Antivirüs uyarısı önemli bir güvenlik sinyalidir. Uyarıya rağmen yükleme; virüs, fidye yazılımı veya casus yazılım bulaşmasına yol açabilir.'},
+
+  {id:9,topic:'security',type:'mcq',
+   text:'Dijital vatandaşlığa uymayan davranış hangisidir?',
+   opts:['Güçlü şifre kullanmak.',
+         'HTTPS sitelerini tercih etmek.',
+         'Arkadaşın fotoğrafına izinsiz olumsuz yorum yazmak.',
+         'Antivirüs güncellemelerini düzenli yapmak.'],
+   cor:2,
+   exp:'Başkasının fotoğrafına izinsiz aşağılayıcı yorum yazmak siber zorbalık kapsamına girer; dijital vatandaşlığın saygı ilkesini ihlal eder.'},
+
+  {id:10,topic:'security',type:'fill',
+   text:'Güçlü şifrede olması gereken dört özellik şunlardır: büyük harf, küçük harf, ___ ve özel karakter.',
+   answer:'rakam', alts:['sayı','numara','rakamlar'],
+   hint:'0,1,2,3… gibi semboller hangi kategoriye girer?',
+   exp:'Güçlü şifre: büyük harf + küçük harf + rakam + özel karakter (!@#$) kombinasyonundan oluşmalıdır.'},
+
+  {id:11,topic:'tech',type:'match',
+   text:'Teknoloji bağımlılığının belirtisini etkisiyle eşleştiriniz.',
+   pairs:[
+     {left:'Uzun süre ekrana bakmak', right:'Göz yorgunluğu'},
+     {left:'Geç saatlere kadar oyun oynamak', right:'Uyku bozukluğu'},
+     {left:'Uzun süre hareketsiz oturmak', right:'Bel ve boyun ağrısı'},
+     {left:'Sosyal hayattan kopuş', right:'Yalnızlık ve depresyon'}
+   ],
+   exp:'WHO 2019\'da oyun bağımlılığını resmi hastalık olarak tanımıştır. Teknoloji bağımlılığı; göz, uyku, kas-iskelet ve ruh sağlığını etkiler.'},
+
+  {id:12,topic:'ai',type:'mcq',
+   text:'Yapay zekânın çalışma sürecinin doğru sırası hangisidir?',
+   opts:['Karar verme → Veri toplama → Öğrenme',
+         'Öğrenme → Veri toplama → Karar verme',
+         'Veri toplama → Öğrenme → Karar verme',
+         'Veri toplama → Karar verme → Öğrenme'],
+   cor:2,
+   exp:'YZ önce büyük miktarda veri toplar, bu verilerden örüntüler öğrenir, ardından yeni durumlarda karar verir veya tahmin yapar.'},
+
+  {id:13,topic:'ai',type:'fill',
+   text:'İnsan ve YZ zekâsı arasındaki en temel fark; insanların duygu, ___ ve empati gibi özelliklere sahip olması, YZ\'nın bunları gerçek anlamda yaşayamamasıdır.',
+   answer:'sezgi', alts:['sezgi ve yaratıcılık','yaratıcılık','hayal gücü'],
+   hint:'İnsanlar bir şeyi kanıtlamadan "hissederek" bilebilir. Bu yetiye ne denir?',
+   exp:'İnsan zekâsı; duygu, sezgi, yaratıcılık ve empatiyle karar verebilir. YZ yalnızca veriler ve algoritmalar doğrultusunda işlem yapar.'},
+
+  {id:14,topic:'ai',type:'mcq',
+   text:'Google Haritalar\'ın yapay zekâ özelliği hangisidir?',
+   opts:['Müzik çalma',
+         'Trafik verilerini analiz edip en hızlı rotayı önermesi',
+         'Fotoğraf filtresi uygulama',
+         'Emoji önerisi'],
+   cor:1,
+   exp:'Google Haritalar; trafik yoğunluğu ve geçmiş veriyi analiz ederek en iyi rotayı hesaplar — navigasyon YZ\'sının klasik örneğidir.'},
+
+  {id:15,topic:'ai',type:'match',
+   text:'YZ kullanım alanını uygulamasıyla eşleştiriniz.',
+   pairs:[
+     {left:'📍 Navigasyon', right:'Google Maps'},
+     {left:'🌐 Çeviri', right:'DeepL / Google Çeviri'},
+     {left:'✍️ Yazı oluşturma', right:'ChatGPT / Claude'},
+     {left:'📷 Fotoğraf düzenleme', right:'Adobe Lightroom AI'}
+   ],
+   exp:'YZ; navigasyon, çeviri, içerik üretimi ve görsel işleme gibi pek çok alanda günlük hayatımızda yer almaktadır.'},
+
+  {id:16,topic:'ai',type:'mcq',
+   text:'Öğrencinin ödevinin tamamını yapay zekâya yaptırması hakkında hangisi doğrudur?',
+   opts:['Evet, teknolojiyi iyi kullanmaktır.',
+         'Hayır; bu intihal sayılır, öğrenmeyi engeller ve akademik dürüstlüğe aykırıdır.',
+         'Evet, kimse görmezse sorun olmaz.',
+         'Hayır, sadece yasadışı olduğu için.'],
+   cor:1,
+   exp:'YZ; fikir almak ve kontrol ettirmek için kullanılabilir. Ancak tümünü yaptırmak kopyacılıkla eşdeğerdir ve kişinin gelişimini engeller.'},
+
+  {id:17,topic:'ai',type:'open',
+   text:'Yapay zekâ kullanırken kişisel bilgilerinizi korumak için ne yapmalısınız? En az bir önlem yazınız.',
+   hint:'YZ uygulamalarına gerçek adınızı, adresinizi veya şifrenizi girmek gerekiyor mu?',
+   model:'YZ uygulamalarına gerçek ad, adres veya şifre gibi kişisel bilgiler verilmemelidir. Uygulama izinleri dikkatli incelenmeli, güvenilir platformlar tercih edilmelidir.'},
+
+  {id:18,topic:'data',type:'mcq',
+   text:'"25" rakamı tek başına ne anlam ifade eder?',
+   opts:['25 bir bilgidir; sınav notu olduğunu gösterir.',
+         '25 bir veridir; işlenmemiş, bağlamı olmayan ham sayıdır.',
+         '25 bir algoritmadır.',
+         '25 bir yapay zekâ çıktısıdır.'],
+   cor:1,
+   exp:'Veri; ham ve tek başına anlam taşımayan gerçeklerdir. "Ahmet matematikten 25 aldı" gibi bağlama oturtulduğunda bilgiye dönüşür.'},
+
+  {id:19,topic:'data',type:'match',
+   text:'Ham veriyi doğru bağlamıyla eşleştiriniz.',
+   pairs:[
+     {left:'Ham veri: 90', right:'Ahmet mat. sınavından 90 aldı.'},
+     {left:'Ham veri: 38.5', right:'Ateşi 38.5°C; hasta olabilir.'},
+     {left:'Ham veri: 07:30', right:'Okul 07:30\'da başlıyor.'}
+   ],
+   exp:'Veri işlenip anlamlandırıldığında bilgiye dönüşür. Bilgi; karar vermeye rehberlik eder.'},
+
+  {id:20,topic:'data',type:'order',
+   text:'"Limonata yapma" sürecini doğru sıraya diziniz.',
+   items:['🍋 Limonları sık','🥄 Şeker ekle, karıştır','💧 Sürahi içine su doldur','🧊 Buz ekle ve servis yap','👅 Tadını kontrol et'],
+   correctOrder:[2,0,1,4,3],
+   exp:'Girdi: limon, su, şeker, buz | İşlem: sıkma, karıştırma, tatma | Çıktı: limonata.'},
+
+  {id:21,topic:'data',type:'open',
+   text:'Algoritmik düşünmede bir problem belirlenirken nelere dikkat edilir? Günlük hayattan bir örnek veriniz.',
+   hint:'Problem net mi olmalı? Çözülebilir mi? Giriş ve çıkışları belli mi?',
+   model:'Problem; net tanımlanmalı, çözülebilir olmalı, giriş-çıkış bilgileri belli olmalıdır.\nÖrnek: "Sabah geç kalkıyorum" — nettir, çözümlenebilirdir, girdisi (alarm) ve çıktısı (zamanında uyanma) bellidir.'},
+
+  {id:22,topic:'algo',type:'fill',
+   text:'Bir problemin çözümüne ilişkin adımların mantıksal sırayla BAŞLA–BİTİR arasında listelenmesine ___ adı verilir.',
+   answer:'algoritma', alts:['algoritmik düşünme'],
+   hint:'İngilizcesi "algorithm" olan bilgisayar bilimi kavramı…',
+   exp:'Algoritma; problemi çözmek için izlenecek adımları sıralayan, BAŞLA ile başlayıp BİTİR ile sonlanan mantıksal plandır.'},
+
+  {id:23,topic:'algo',type:'mcq',
+   text:'Algoritma yazım kurallarına göre hangi ifade doğrudur?',
+   opts:['Her adım istek kipiyle: "Kaynatsaydın iyi olurdu."',
+         'Her adım emir kipiyle, kısa ve net: "Suyu kaynat."',
+         'Adımlar karışık sırada olabilir.',
+         'Başla ve Bitir komutları isteğe bağlıdır.'],
+   cor:1,
+   exp:'Algoritma; emir kipiyle (kaynat, koy, bekle), kısa ve net cümlelerle, BAŞLA–BİTİR komutları arasında yazılmalıdır.'},
+
+  {id:24,topic:'algo',type:'order',
+   text:'Çay yapma algoritmasını doğru sıraya diziniz.',
+   items:['☕ Çay bardağını doldur','🔥 Suyu kaynat','🫖 Demliğe çay koy','⏳ Çayın demlenmesini bekle','💧 Kaynayan suyu demliğe dök'],
+   correctOrder:[1,2,4,3,0],
+   exp:'BAŞLA → Suyu kaynat → Demliğe çay koy → Kaynayan suyu demliğe dök → Çayın demlenmesini bekle → Çay bardağını doldur → BİTİR'},
+
+  {id:25,topic:'algo',type:'fill',
+   text:'Hazırladığımız algoritma ya da programın doğru çalışıp çalışmadığını anlamak için yapılan işleme ___ denir.',
+   answer:'test etme', alts:['test','sınama','hata ayıklama','debug','kontrol etme','kontrol'],
+   hint:'Yazılımcılar programlarını bitirince ne yapar?',
+   exp:'Test etme (debug), algoritma veya programdaki hataları (bug) bulmak ve düzeltmek için zorunlu bir süreçtir.'},
+
+  {id:26,topic:'algo',type:'mcq',
+   text:'"Bilgisayarı açmak için önce tuşa basarsın, sonra ekranın gelmesini beklersin." Algoritma karşılığı hangisidir?',
+   opts:['1. Tuşa basılabilir. 2. Ekran beklenir.',
+         '1. Güç tuşuna bas. 2. Ekranın açılmasını bekle.',
+         '1. Lütfen tuşa basar mısın? 2. Ekran gelince devam et.',
+         '1. Tuşa bast. 2. Ekran geldi.'],
+   cor:1,
+   exp:'Algoritma emir kipi kullanır: "bas." ve "bekle." Geçmiş zaman veya istek kipi kullanılmaz.'},
+
+  {id:27,topic:'algo',type:'mcq',
+   text:'Ayşe kek yapıyor: un, şeker, yumurta, süt → fırınlıyor → taze kek çıkıyor. Bu sürecin ÇIKTISI nedir?',
+   opts:['Un ve şeker','Fırın','Taze pişmiş kek','Yumurta'],
+   cor:2,
+   exp:'Girdi: un, şeker, yumurta, süt | İşlem: karıştırma + fırınlama | Çıktı: taze pişmiş kek. Çıktı; sürecin ürünü veya sonucudur.'},
+
+  {id:28,topic:'algo',type:'open',
+   text:'"Okula hazırlık" sürecine dair bir algoritmanın ilk üç adımını BAŞLA komutundan sonra emir kipiyle yazınız.',
+   hint:'Sabah uyandığınızda okula gitmeden önce ilk ne yaparsınız?',
+   model:'BAŞLA\n1. Alarmı kapat.\n2. Yüzünü yıka ve dişlerini fırçala.\n3. Okul üniformanı giy.\n...'}
+];
+
+// ─── STATE ───
+var xp=0, corr=0, wrng=0, streak=0, bestStreak=0;
+var queue=[], qi=0, wrongIds=[], topicDone={};
+var mSel={left:null,right:null,matched:[]};
+var draggedEl=null;
+
+// ─── STARS ───
+(function(){
+  var s=document.getElementById('stars');
+  for(var i=0;i<70;i++){
+    var el=document.createElement('div');
+    el.className='star';
+    var sz=Math.random()*2.5+0.8;
+    el.style.cssText='width:'+sz+'px;height:'+sz+'px;top:'+(Math.random()*100)+'%;left:'+(Math.random()*100)+'%;--d:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*4)+'s';
+    s.appendChild(el);
+  }
+})();
+
+// ─── HUD ───
+function updateHUD(){
+  document.getElementById('xpNum').textContent=xp+' XP';
+  document.getElementById('xpFill').style.width=(xp%100)+'%';
+  document.getElementById('sc').textContent=corr;
+  document.getElementById('sw').textContent=wrng;
+  document.getElementById('ss').textContent=streak;
+}
+
+// ─── SCREENS ───
+function show(id){
+  ['home','quiz','results'].forEach(function(s){
+    document.getElementById(s).classList.toggle('active',s===id);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function goHome(){show('home');buildGrid();}
+
+// ─── GRID ───
+function buildGrid(){
+  var g=document.getElementById('topicsGrid');
+  g.innerHTML='';
+  TOPICS.forEach(function(t){
+    var done=topicDone[t.id]||0, total=t.qids.length;
+    var pct=total?Math.round(done/total*100):0;
+    var d=document.createElement('div');
+    d.className='topic-card';
+    d.style.setProperty('--tc',t.color);
+    d.innerHTML='<span class="t-icon">'+t.icon+'</span><div class="t-name">'+t.name+'</div><div class="t-count">'+done+'/'+total+' tamamlandı</div><div class="t-bar"><div class="t-bar-fill" style="width:'+pct+'%;background:'+t.color+'"></div></div>';
+    (function(tid){d.onclick=function(){startTopic(tid);};})(t.id);
+    g.appendChild(d);
+  });
+}
+
+// ─── SHUFFLE ───
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=a[i];a[i]=a[j];a[j]=tmp;}
+  return a;
+}
+
+// ─── START ───
+function startTopic(id){
+  var t=TOPICS.filter(function(x){return x.id===id;})[0];
+  queue=shuffle(t.qids.map(function(i){return Q[i];}));
+  beginQuiz();
+}
+function startAll(){
+  queue=shuffle(Q.slice());
+  beginQuiz();
+}
+function retryWrong(){
+  queue=shuffle(wrongIds.map(function(id){return Q.filter(function(q){return q.id===id;})[0];}).filter(Boolean));
+  beginQuiz();
+}
+function beginQuiz(){
+  qi=0; wrongIds=[];
+  corr=0; wrng=0; streak=0; bestStreak=0; xp=0;
+  updateHUD();
+  buildDots();
+  show('quiz');
+  renderQ();
+}
+
+// ─── DOTS ───
+function buildDots(){
+  var d=document.getElementById('qDots');
+  d.innerHTML='';
+  queue.forEach(function(_,i){
+    var el=document.createElement('div');
+    el.className='q-dot'+(i===0?' da':'');
+    el.id='dot'+i;
+    d.appendChild(el);
+  });
+  document.getElementById('qInfo').textContent='Soru 1 / '+queue.length;
+}
+function advanceDot(i){
+  var el=document.getElementById('dot'+i);
+  if(el) el.className='q-dot dc';
+  var nx=document.getElementById('dot'+(i+1));
+  if(nx) nx.className='q-dot da';
+  document.getElementById('qInfo').textContent='Soru '+Math.min(i+2,queue.length)+' / '+queue.length;
+}
+
+// ─── RENDER ───
+function renderQ(){
+  if(qi>=queue.length){showResults();return;}
+  var q=queue[qi];
+  var topicObj=TOPICS.filter(function(t){return t.id===q.topic;})[0];
+  var typeLabel={mcq:'🔘 Çoktan Seçmeli',fill:'✏️ Boşluk Doldur',open:'📝 Açık Uçlu',match:'🔗 Eşleştirme',order:'📋 Sırala'}[q.type];
+  var typeCls={mcq:'bm',fill:'bf',open:'bo',match:'bmt',order:'bor'}[q.type];
+
+  var card=document.createElement('div');
+  card.className='q-card';
+  card.innerHTML=
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;">'+
+      '<span class="q-type-badge '+typeCls+'">'+typeLabel+'</span>'+
+      '<span class="topic-tag">'+topicObj.icon+' '+topicObj.name+'</span>'+
+    '</div>'+
+    '<div class="q-num">Soru '+(qi+1)+' / '+queue.length+'</div>'+
+    '<div class="q-text">'+q.text+'</div>'+
+    '<div id="qBody"></div>'+
+    '<div class="feedback" id="feedback"></div>'+
+    '<div class="btn-row" id="btnRow"></div>';
+
+  var arena=document.getElementById('arena');
+  arena.innerHTML='';
+  arena.appendChild(card);
+
+  var body=document.getElementById('qBody');
+  if(q.type==='mcq')   renderMCQ(q,body);
+  else if(q.type==='fill')  renderFill(q,body);
+  else if(q.type==='open')  renderOpen(q,body);
+  else if(q.type==='match') renderMatch(q,body);
+  else if(q.type==='order') renderOrder(q,body);
+}
+
+// ─── MCQ ───
+function renderMCQ(q,body){
+  var wrap=document.createElement('div');wrap.className='options';
+  ['A','B','C','D'].slice(0,q.opts.length).forEach(function(ltr,i){
+    var el=document.createElement('div');el.className='opt';el.id='opt'+i;
+    el.innerHTML='<span class="opt-letter">'+ltr+'</span><span>'+q.opts[i]+'</span>';
+    (function(idx){el.onclick=function(){checkMCQ(q,idx);};})(i);
+    wrap.appendChild(el);
+  });
+  body.appendChild(wrap);
+}
+function checkMCQ(q,chosen){
+  var opts=document.querySelectorAll('.opt');
+  opts.forEach(function(o){o.classList.add('disabled');o.onclick=null;});
+  if(chosen===q.cor){opts[chosen].classList.add('cor');markCorrect(q,20);}
+  else{opts[chosen].classList.add('wrn');opts[q.cor].classList.add('rev');markWrong(q);}
+  showFB(q,chosen===q.cor);
+  addNext();
+}
+
+// ─── FILL ───
+function renderFill(q,body){
+  if(q.hint){
+    var hb=document.createElement('button');hb.className='hint-btn';hb.textContent='💡 İpucu Göster';
+    var hbox=document.createElement('div');hbox.className='hint-box';hbox.textContent=q.hint;
+    hb.onclick=function(){hbox.classList.toggle('show');hb.textContent=hbox.classList.contains('show')?'💡 İpucuyu Gizle':'💡 İpucu Göster';};
+    body.appendChild(hb);body.appendChild(hbox);
+  }
+  var inp=document.createElement('input');
+  inp.type='text';inp.className='fill-input';inp.placeholder='Cevabınızı yazın…';inp.id='fi';
+  body.appendChild(inp);
+  var btn=document.createElement('button');btn.className='btn btn-primary';btn.textContent='✅ Kontrol Et';
+  btn.onclick=function(){checkFill(q,inp,btn);};
+  inp.onkeydown=function(e){if(e.key==='Enter')checkFill(q,inp,btn);};
+  document.getElementById('btnRow').appendChild(btn);
+  setTimeout(function(){inp.focus();},120);
+}
+function checkFill(q,inp,btn){
+  if(inp.disabled)return;
+  inp.disabled=true;btn.disabled=true;
+  var val=inp.value.trim().toLowerCase();
+  var ans=q.answer.toLowerCase();
+  var alts=(q.alts||[]).map(function(a){return a.toLowerCase();});
+  var ok=val===ans||alts.indexOf(val)>=0||(val.length>2&&(ans.indexOf(val)>=0||val.indexOf(ans)>=0));
+  inp.classList.add(ok?'cor':'wrn');
+  if(!ok)inp.value=q.answer;
+  if(ok)markCorrect(q,15);else markWrong(q);
+  btn.remove();
+  showFB(q,ok);addNext();
+}
+
+// ─── OPEN ───
+function renderOpen(q,body){
+  var hb=document.createElement('button');hb.className='hint-btn';hb.textContent='💡 İpucu Göster';
+  var hbox=document.createElement('div');hbox.className='hint-box';hbox.textContent=q.hint;
+  hb.onclick=function(){hbox.classList.toggle('show');hb.textContent=hbox.classList.contains('show')?'💡 İpucuyu Gizle':'💡 İpucu Göster';};
+  body.appendChild(hb);body.appendChild(hbox);
+  var ta=document.createElement('textarea');ta.className='open-ta';ta.placeholder='Cevabınızı buraya yazın…';
+  body.appendChild(ta);
+  var btn=document.createElement('button');btn.className='btn btn-primary';btn.textContent='📋 Model Cevabı Gör';
+  btn.onclick=function(){showOpen(q,ta,btn);};
+  document.getElementById('btnRow').appendChild(btn);
+}
+function showOpen(q,ta,btn){
+  ta.disabled=true;btn.remove();
+  var fb=document.getElementById('feedback');
+  fb.className='feedback fb-model vis';
+  fb.innerHTML='<span class="fb-icon">📋</span><div class="fb-body">Kendi cevabınızla karşılaştırın:<div class="model-box">'+q.model.replace(/\n/g,'<br>')+'</div></div>';
+  var row=document.getElementById('btnRow');
+  var bc=document.createElement('button');bc.className='btn btn-teal';bc.textContent='✅ Doğru anlamıştım';
+  var bw=document.createElement('button');bw.className='btn btn-ghost';bw.textContent='❌ Eksik/Yanlış';
+  bc.onclick=function(){markCorrect(q,10);bc.remove();bw.remove();addNext();};
+  bw.onclick=function(){markWrong(q);bc.remove();bw.remove();addNext();};
+  row.appendChild(bc);row.appendChild(bw);
+}
+
+// ─── MATCH ───
+function renderMatch(q,body){
+  mSel={left:null,right:null,matched:[]};
+  var li=shuffle(q.pairs.map(function(_,i){return i;}));
+  var ri=shuffle(q.pairs.map(function(_,i){return i;}));
+  var grid=document.createElement('div');grid.className='match-grid';
+  var lWrap=document.createElement('div');
+  lWrap.innerHTML='<div class="match-col-title">Sol</div>';
+  var lCol=document.createElement('div');lCol.className='match-col';
+  li.forEach(function(idx){
+    var el=document.createElement('div');el.className='match-item';el.dataset.idx=idx;el.dataset.side='left';
+    el.textContent=q.pairs[idx].left;
+    (function(e){e.onclick=function(){matchClick(e,q);};})(el);
+    lCol.appendChild(el);
+  });
+  lWrap.appendChild(lCol);
+  var rWrap=document.createElement('div');
+  rWrap.innerHTML='<div class="match-col-title">Sağ</div>';
+  var rCol=document.createElement('div');rCol.className='match-col';
+  ri.forEach(function(idx){
+    var el=document.createElement('div');el.className='match-item';el.dataset.idx=idx;el.dataset.side='right';
+    el.textContent=q.pairs[idx].right;
+    (function(e){e.onclick=function(){matchClick(e,q);};})(el);
+    rCol.appendChild(el);
+  });
+  rWrap.appendChild(rCol);
+  grid.appendChild(lWrap);grid.appendChild(rWrap);
+  body.appendChild(grid);
+}
+function matchClick(el,q){
+  if(el.classList.contains('mok'))return;
+  var side=el.dataset.side;
+  document.querySelectorAll('.match-item.msel').forEach(function(e){if(e.dataset.side===side)e.classList.remove('msel');});
+  el.classList.add('msel');
+  if(side==='left')mSel.left=el;else mSel.right=el;
+  if(mSel.left&&mSel.right){
+    var li=parseInt(mSel.left.dataset.idx),ri=parseInt(mSel.right.dataset.idx);
+    if(li===ri){
+      mSel.left.classList.remove('msel');mSel.left.classList.add('mok');
+      mSel.right.classList.remove('msel');mSel.right.classList.add('mok');
+      mSel.matched.push(li);mSel.left=null;mSel.right=null;
+      if(mSel.matched.length===q.pairs.length){
+        markCorrect(q,25);showFB(q,true);addNext();
+        document.querySelectorAll('.match-item:not(.mok)').forEach(function(e){e.onclick=null;});
+      }
+    } else {
+      var ml=mSel.left,mr=mSel.right;
+      ml.classList.remove('msel');ml.classList.add('mno');
+      mr.classList.remove('msel');mr.classList.add('mno');
+      mSel.left=null;mSel.right=null;
+      setTimeout(function(){ml.classList.remove('mno');mr.classList.remove('mno');},400);
+    }
+  }
+}
+
+// ─── ORDER ───
+function renderOrder(q,body){
+  var perm=shuffle(q.correctOrder.map(function(_,i){return i;}));
+  var list=document.createElement('ul');list.className='order-list';list.id='ol';
+  perm.forEach(function(origPos){
+    var li=document.createElement('li');
+    li.className='order-item';li.draggable=true;li.dataset.orig=origPos;
+    li.innerHTML='<span class="drag-handle">⠿</span><span>'+q.items[origPos]+'</span>';
+    list.appendChild(li);
+  });
+  body.appendChild(list);
+  initDrag(list);
+  var btn=document.createElement('button');btn.className='btn btn-primary';btn.textContent='✅ Sırayı Kontrol Et';
+  btn.onclick=function(){checkOrder(q,list,btn);};
+  document.getElementById('btnRow').appendChild(btn);
+}
+function initDrag(list){
+  list.querySelectorAll('.order-item').forEach(function(item){
+    item.addEventListener('dragstart',function(){draggedEl=item;setTimeout(function(){item.classList.add('dragging');},0);});
+    item.addEventListener('dragend',function(){item.classList.remove('dragging');draggedEl=null;list.querySelectorAll('.order-item').forEach(function(i){i.classList.remove('over-el');});});
+    item.addEventListener('dragover',function(e){e.preventDefault();if(draggedEl&&draggedEl!==item)item.classList.add('over-el');});
+    item.addEventListener('dragleave',function(){item.classList.remove('over-el');});
+    item.addEventListener('drop',function(e){e.preventDefault();item.classList.remove('over-el');if(draggedEl&&draggedEl!==item)list.insertBefore(draggedEl,item);});
+  });
+}
+function checkOrder(q,list,btn){
+  var items=list.querySelectorAll('.order-item');
+  var userOrder=Array.from(items).map(function(i){return parseInt(i.dataset.orig);});
+  var allOk=userOrder.every(function(v,i){return v===q.correctOrder[i];});
+  items.forEach(function(item,i){
+    item.draggable=false;item.classList.add('locked');
+    item.classList.add(parseInt(item.dataset.orig)===q.correctOrder[i]?'oc':'ow');
+  });
+  btn.remove();
+  if(allOk)markCorrect(q,20);else markWrong(q);
+  showFB(q,allOk);addNext();
+}
+
+// ─── FEEDBACK ───
+function showFB(q,ok){
+  if(q.type==='open')return;
+  var fb=document.getElementById('feedback');
+  if(ok){
+    var msgs=['🎉 Harika! Doğru!','⚡ Mükemmel!','🌟 Süpersin!','🔥 Muhteşem!','✅ Tam isabet!'];
+    fb.className='feedback fb-cor vis';
+    fb.innerHTML='<span class="fb-icon">'+msgs[Math.floor(Math.random()*msgs.length)]+'</span><div class="fb-body"><strong>Açıklama:</strong> '+q.exp+'</div>';
+  } else {
+    fb.className='feedback fb-wrn vis';
+    fb.innerHTML='<span class="fb-icon">💡</span><div class="fb-body"><strong>Doğru cevap:</strong> '+q.exp+'</div>';
+  }
+}
+
+// ─── NEXT BUTTON ───
+function addNext(){
+  var row=document.getElementById('btnRow');
+  if(row.querySelector('.next-btn'))return;
+  var isLast=qi===queue.length-1;
+  var btn=document.createElement('button');
+  btn.className='btn btn-teal next-btn';
+  btn.textContent=isLast?'🏁 Sonuçları Gör':'➡️ Sonraki Soru';
+  btn.onclick=function(){advanceDot(qi);qi++;renderQ();window.scrollTo({top:0,behavior:'smooth'});};
+  row.appendChild(btn);
+}
+
+// ─── SCORING ───
+function markCorrect(q,pts){
+  streak++;if(streak>bestStreak)bestStreak=streak;
+  corr++;
+  var bonus=streak>=3?Math.floor(pts*.5):0;
+  xp+=pts+bonus;
+  var t=TOPICS.filter(function(x){return x.id===q.topic;})[0];
+  if(t)topicDone[t.id]=(topicDone[t.id]||0)+1;
+  toast(bonus>0?'✅ Doğru! +'+pts+' XP  🔥 +'+bonus+' bonus!':'✅ Doğru! +'+pts+' XP','t-cor');
+  updateHUD();
+}
+function markWrong(q){
+  streak=0;wrng++;
+  if(wrongIds.indexOf(q.id)<0)wrongIds.push(q.id);
+  toast('❌ Yanlış! Açıklamayı oku.','t-wrn');
+  updateHUD();
+}
+
+// ─── TOAST ───
+function toast(msg,cls){
+  var el=document.createElement('div');el.className='toast '+cls;el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(function(){el.remove();},2500);
+}
+
+// ─── RESULTS ───
+function showResults(){
+  show('results');
+  var total=queue.length,pct=Math.round(corr/(total||1)*100);
+  var titles=['😢 Biraz Daha Çalış!','💪 İyi Gidiyorsun!','🌟 Harika!','🏆 Mükemmel!'];
+  var subs=['Merak etme, pratik yaparsan gelişirsin.','Azıcık daha ve çok iyi olacaksın!','Gerçekten iyi bir performans!','Tüm konuları özümsedin!'];
+  var idx=pct<40?0:pct<65?1:pct<90?2:3;
+  document.getElementById('resTitle').textContent=titles[idx];
+  document.getElementById('resSub').textContent=subs[idx];
+  document.getElementById('resPct').textContent=pct+'%';
+  var color=pct<40?'#EF476F':pct<65?'#FFD166':pct<90?'#06D6A0':'#9B5DE5';
+  var ring=document.getElementById('scoreRing');
+  ring.style.borderColor=color;ring.style.boxShadow='0 0 26px '+color+'55';
+  document.getElementById('resPct').style.color=color;
+  document.getElementById('rC').textContent=corr;
+  document.getElementById('rW').textContent=wrng;
+  document.getElementById('rX').textContent=xp;
+  document.getElementById('rS').textContent=bestStreak;
+  document.getElementById('retryBtn').style.display=wrongIds.length?'flex':'none';
+  buildBadges(pct);
+  if(pct>=70)confetti();
+}
+function buildBadges(pct){
+  var list=[];
+  if(pct===100)list.push({i:'🏆',l:'Mükemmel Skor'});
+  if(bestStreak>=5)list.push({i:'🔥',l:'Seri x'+bestStreak});
+  if(corr>=10)list.push({i:'⭐',l:'10+ Doğru'});
+  if(xp>=150)list.push({i:'⚡',l:'150+ XP'});
+  var div=document.getElementById('earnedBadges');div.innerHTML='';
+  if(list.length){
+    div.innerHTML='<div style="width:100%;text-align:center;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">🎖️ Kazanılan Rozetler</div>';
+    list.forEach(function(b){div.innerHTML+='<div class="res-badge" style="border-color:rgba(255,209,102,.3);"><span class="rb-icon">'+b.i+'</span><span class="rb-lbl">'+b.l+'</span></div>';});
+  }
+}
+function confetti(){
+  var cols=['#FF6B35','#FFD166','#06D6A0','#9B5DE5','#EF476F','#118AB2'];
+  for(var i=0;i<60;i++){
+    var el=document.createElement('div');el.className='cf';
+    el.style.cssText='left:'+(Math.random()*100)+'%;background:'+cols[Math.floor(Math.random()*cols.length)]+';--d:'+(2.5+Math.random()*2.5)+'s;--dl:'+(Math.random()*1.2)+'s;transform:rotate('+(Math.random()*360)+'deg)';
+    document.body.appendChild(el);
+    (function(e){setTimeout(function(){e.remove();},5000);})(el);
+  }
+}
+
+// ─── EVENT LISTENERS ───
+document.getElementById('btnAll').onclick=function(){startAll();};
+document.getElementById('btnBack').onclick=function(){goHome();};
+document.getElementById('retryBtn').onclick=function(){retryWrong();};
+document.getElementById('btnHome2').onclick=function(){goHome();};
+
+// ─── INIT ───
+buildGrid();
+updateHUD();
+</script>
+</body>
+</html>
